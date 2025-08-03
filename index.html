@@ -804,10 +804,8 @@
 
         // Initialize default users if not exists
         function initializeUsers() {
-            if (!localStorage.getItem('arvUsers')) {
-                localStorage.setItem('arvUsers', JSON.stringify(defaultUsers));
-            }
-        }
+    localStorage.setItem('arvUsers', JSON.stringify(defaultUsers));
+}
 
         // Show alert messages
         function showAlert(message, type) {
