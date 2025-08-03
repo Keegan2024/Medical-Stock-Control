@@ -1,0 +1,464 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🏥 ARV Stock Control System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom animations */
+        .fade-in { animation: fadeIn 0.5s ease-in; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .modal { display: none; }
+        .modal.show { display: block; }
+    </style>
+</head>
+<body class="bg-blue-600 min-h-screen flex flex-col items-center justify-center p-4">
+    <!-- Login Section -->
+    <section id="login-section" class="bg-white rounded-lg shadow-lg p-6 w-full max-w-md fade-in">
+        <h1 class="text-2xl font-bold text-blue-800 mb-2 text-center">🏥 ARV Stock Control System</h1>
+        <h2 class="text-lg text-gray-600 mb-4 text-center">Luapula Province, Zambia</h2>
+        <form id="loginForm" action="/login" method="POST">
+            <label for="username" class="block text-sm font-medium text-gray-700 mb-1">Username:</label>
+            <input type="text" id="username" name="username" required placeholder="Enter your username" class="w-full p-2 border rounded-md mb-3 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            
+            <label for="password" class="block text-sm font-medium text-gray-700 mb-1">Password:</label>
+            <input type="password" id="password" name="password" required placeholder="Enter your password" class="w-full p-2 border rounded-md mb-3 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            
+            <!-- CSRF token (replace 'csrf_token_value' with actual token from backend) -->
+            <input type="hidden" name="_csrf" value="csrf_token_value">
+            
+            <div id="login-error" class="text-red-500 text-sm mb-3 hidden"></div>
+            
+            <button type="submit" class="w-full bg-blue-500 text-white p-2 rounded-md hover:bg-blue-600 transition">Login</button>
+        </form>
+    </section>
+
+    <!-- Dashboard Section -->
+    <section id="dashboard-section" class="bg-white rounded-lg shadow-lg p-6 w-full max-w-4xl hidden fade-in">
+        <h1 class="text-2xl font-bold text-blue-800 mb-2 text-center">🏥 ARV Stock Control System</h1>
+        <h2 class="text-lg text-gray-600 mb-4 text-center">Weekly ARV Reporting & HIV Program Monitoring - Luapula Province</h2>
+        <form action="/logout" method="POST" class="mb-4">
+            <input type="hidden" name="_csrf" value="csrf_token_value">
+            <button type="submit" class="bg-red-500 text-white p-2 rounded-md hover:bg-red-600 transition">Logout</button>
+        </form>
+        <nav class="flex flex-wrap gap-2 justify-center">
+            <button onclick="showSection('report-section')" class="bg-blue-500 text-white p-2 rounded-md hover:bg-blue-600 transition">📝 Submit ARV Report</button>
+            <button onclick="showSection('reports-section')" class="bg-blue-500 text-white p-2 rounded-md hover:bg-blue-600 transition">📊 View Reports</button>
+            <button onclick="showSection('user-management-section')" class="bg-blue-500 text-white p-2 rounded-md hover:bg-blue-600 transition">👥 User Management</button>
+            <button onclick="showSection('admin-section')" class="bg-blue-500 text-white p-2 rounded-md hover:bg-blue-600 transition">⚙️ Admin Dashboard</button>
+        </nav>
+    </section>
+
+    <!-- Report Submission Section -->
+    <section id="report-section" class="bg-white rounded-lg shadow-lg p-6 w-full max-w-4xl hidden fade-in">
+        <h2 class="text-xl font-bold text-blue-800 mb-4">📝 Weekly ARV Stock & Program Report</h2>
+        <form id="reportForm" action="/submit-report" method="POST">
+            <input type="hidden" name="_csrf" value="csrf_token_value">
+            
+            <h3 class="text-lg font-semibold text-gray-700 mb-2">📅 Report Information</h3>
+            <label for="report-week" class="block text-sm font-medium text-gray-700 mb-1">Report Week:</label>
+            <input type="week" id="report-week" name="report_week" required class="w-full p-2 border rounded-md mb-3 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            
+            <label for="facility-name" class="block text-sm font-medium text-gray-700 mb-1">Facility Name:</label>
+            <input type="text" id="facility-name" name="facility_name" required class="w-full p-2 border rounded-md mb-3 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            
+            <label for="reporter-name" class="block text-sm font-medium text-gray-700 mb-1">Reporter Name:</label>
+            <input type="text" id="reporter-name" name="reporter_name" required class="w-full p-2 border rounded-md mb-3 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            
+            <h3 class="text-lg font-semibold text-gray-700 mb-2">💊 ARV Commodities Stock Report</h3>
+            <button type="button" onclick="addCommodityRow('arv-commodities')" class="bg-green-500 text-white p-2 rounded-md hover:bg-green-600 transition mb-2">Add ARV Commodity</button>
+            <div class="overflow-x-auto">
+                <table id="arv-commodities" class="w-full border-collapse">
+                    <thead>
+                        <tr class="bg-blue-100">
+                            <th class="border p-2 text-left">Commodity</th>
+                            <th class="border p-2 text-left">Opening Balance</th>
+                            <th class="border p-2 text-left">Received</th>
+                            <th class="border p-2 text-left">Used</th>
+                            <th class="border p-2 text-left">Given Out</th>
+                            <th class="border p-2 text-left">Current Balance</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="border p-2"><input type="text" name="commodities[0][name]" required class="w-full p-1 border rounded"></td>
+                            <td class="border p-2"><input type="number" name="commodities[0][opening_balance]" required min="0" class="w-full p-1 border rounded"></td>
+                            <td class="border p-2"><input type="number" name="commodities[0][received]" required min="0" class="w-full p-1 border rounded"></td>
+                            <td class="border p-2"><input type="number" name="commodities[0][used]" required min="0" class="w-full p-1 border rounded"></td>
+                            <td class="border p-2"><input type="number" name="commodities[0][given_out]" required min="0" class="w-full p-1 border rounded"></td>
+                            <td class="border p-2"><input type="number" name="commodities[0][current_balance]" required min="0" class="w-full p-1 border rounded"></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <h3 class="text-lg font-semibold text-gray-700 mb-2 mt-4">🧪 HIV Testing Commodities</h3>
+            <button type="button" onclick="addCommodityRow('test-commodities')" class="bg-green-500 text-white p-2 rounded-md hover:bg-green-600 transition mb-2">Add Test Commodity</button>
+            <div class="overflow-x-auto">
+                <table id="test-commodities" class="w-full border-collapse">
+                    <thead>
+                        <tr class="bg-blue-100">
+                            <th class="border p-2 text-left">Commodity</th>
+                            <th class="border p-2 text-left">Opening Balance</th>
+                            <th class="border p-2 text-left">Received</th>
+                            <th class="border p-2 text-left">Used</th>
+                            <th class="border p-2 text-left">Given Out</th>
+                            <th class="border p-2 text-left">Current Balance</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="border p-2"><input type="text" name="test_commodities[0][name]" required class="w-full p-1 border rounded"></td>
+                            <td class="border p-2"><input type="number" name="test_commodities[0][opening_balance]" required min="0" class="w-full p-1 border rounded"></td>
+                            <td class="border p-2"><input type="number" name="test_commodities[0][received]" required min="0" class="w-full p-1 border rounded"></td>
+                            <td class="border p-2"><input type="number" name="test_commodities[0][used]" required min="0" class="w-full p-1 border rounded"></td>
+                            <td class="border p-2"><input type="number" name="test_commodities[0][given_out]" required min="0" class="w-full p-1 border rounded"></td>
+                            <td class="border p-2"><input type="number" name="test_commodities[0][current_balance]" required min="0" class="w-full p-1 border rounded"></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <h3 class="text-lg font-semibold text-gray-700 mb-2 mt-4">📊 HIV Program Metrics</h3>
+            <label for="clients-seen" class="block text-sm font-medium text-gray-700 mb-1">Total Clients Seen:</label>
+            <input type="number" id="clients-seen" name="clients_seen" required min="0" class="w-full p-2 border rounded-md mb-3 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            
+            <h4 class="text-md font-semibold text-gray-700 mb-2">Drug Delivery Schedule</h4>
+            <label for="due-delivery" class="block text-sm font-medium text-gray-700 mb-1">Due for Drug Delivery:</label>
+            <input type="number" id="due-delivery" name="due_delivery" required min="0" class="w-full p-2 border rounded-md mb-3 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            
+            <label for="mmd-6" class="block text-sm font-medium text-gray-700 mb-1">6MMD (6-month multi-month dispensing):</label>
+            <input type="number" id="mmd-6" name="mmd_6" required min="0" class="w-full p-2 border rounded-md mb-3 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            
+            <label for="mmd-3-5" class="block text-sm font-medium text-gray-700 mb-1">3-5MMD:</label>
+            <input type="number" id="mmd-3-5" name="mmd_3_5" required min="0" class="w-full p-2 border rounded-md mb-3 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            
+            <label for="mmd-less-3" class="block text-sm font-medium text-gray-700 mb-1">Less than 3MMD:</label>
+            <input type="number" id="mmd-less-3" name="mmd_less_3" required min="0" class="w-full p-2 border rounded-md mb-3 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            
+            <h4 class="text-md font-semibold text-gray-700 mb-2">Viral Load Monitoring</h4>
+            <label for="vl-due" class="block text-sm font-medium text-gray-700 mb-1">Clients Due for VL:</label>
+            <input type="number" id="vl-due" name="vl_due" required min="0" class="w-full p-2 border rounded-md mb-3 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            
+            <label for="vl-collected" class="block text-sm font-medium text-gray-700 mb-1">VL Collected (from those due):</label>
+            <input type="number" id="vl-collected" name="vl_collected" required min="0" class="w-full p-2 border rounded-md mb-3 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            
+            <h4 class="text-md font-semibold text-gray-700 mb-2">TPT & Community Activities</h4>
+            <label for="tpt-initiations" class="block text-sm font-medium text-gray-700 mb-1">TPT Initiations:</label>
+            <input type="number" id="tpt-initiations" name="tpt_initiations" required min="0" class="w-full p-2 border rounded-md mb-3 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            
+            <label for="home-deliveries" class="block text-sm font-medium text-gray-700 mb-1">Home Deliveries:</label>
+            <input type="number" id="home-deliveries" name="home_deliveries" required min="0" class="w-full p-2 border rounded-md mb-3 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            
+            <label for="community-activities" class="block text-sm font-medium text-gray-700 mb-1">Community Activities:</label>
+            <input type="number" id="community-activities" name="community_activities" required min="0" class="w-full p-2 border rounded-md mb-3 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            
+            <h3 class="text-lg font-semibold text-gray-700 mb-2 mt-4">📝 Additional Information</h3>
+            <label for="remarks" class="block text-sm font-medium text-gray-700 mb-1">Remarks/Notes:</label>
+            <textarea id="remarks" name="remarks" rows="4" class="w-full p-2 border rounded-md mb-3 focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+            
+            <div id="report-error" class="text-red-500 text-sm mb-3 hidden"></div>
+            
+            <button type="submit" class="w-full bg-blue-500 text-white p-2 rounded-md hover:bg-blue-600 transition">💾 Submit Complete ARV Report</button>
+        </form>
+    </section>
+
+    <!-- View Reports Section -->
+    <section id="reports-section" class="bg-white rounded-lg shadow-lg p-6 w-full max-w-4xl hidden fade-in">
+        <h2 class="text-xl font-bold text-blue-800 mb-4">📊 ARV Stock Reports</h2>
+        <div class="overflow-x-auto">
+            <table class="w-full border-collapse">
+                <thead>
+                    <tr class="bg-blue-100">
+                        <th class="border p-2 text-left">Week</th>
+                        <th class="border p-2 text-left">Hub</th>
+                        <th class="border p-2 text-left">Facility</th>
+                        <th class="border p-2 text-left">Reporter</th>
+                        <th class="border p-2 text-left">Clients Seen</th>
+                        <th class="border p-2 text-left">Due for Delivery</th>
+                        <th class="border p-2 text-left">6MMD</th>
+                        <th class="border p-2 text-left">3-5MMD</th>
+                        <th class="border p-2 text-left">VL Due</th>
+                        <th class="border p-2 text-left">VL Collected</th>
+                        <th class="border p-2 text-left">TPT Initiations</th>
+                        <th class="border p-2 text-left">Submitted</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td colspan="12" class="border p-2 text-center">No reports submitted yet</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- User Management Section -->
+    <section id="user-management-section" class="bg-white rounded-lg shadow-lg p-6 w-full max-w-4xl hidden fade-in">
+        <h2 class="text-xl font-bold text-blue-800 mb-4">👥 User Management</h2>
+        <button onclick="showSection('create-user-modal')" class="bg-green-500 text-white p-2 rounded-md hover:bg-green-600 transition mb-4">➕ Create New User</button>
+        <div class="overflow-x-auto">
+            <table class="w-full border-collapse">
+                <thead>
+                    <tr class="bg-blue-100">
+                        <th class="border p-2 text-left">Name</th>
+                        <th class="border p-2 text-left">Email</th>
+                        <th class="border p-2 text-left">Hub</th>
+                        <th class="border p-2 text-left">Facility</th>
+                        <th class="border p-2 text-left">Role</th>
+                        <th class="border p-2 text-left">Status</th>
+                        <th class="border p-2 text-left">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Populated dynamically by backend -->
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- Admin Dashboard Section -->
+    <section id="admin-section" class="bg-white rounded-lg shadow-lg p-6 w-full max-w-4xl hidden fade-in">
+        <h2 class="text-xl font-bold text-blue-800 mb-4">⚙️ Provincial Administrator Dashboard</h2>
+        <div class="overflow-x-auto">
+            <table class="w-full border-collapse">
+                <thead>
+                    <tr class="bg-blue-100">
+                        <th class="border p-2 text-left">Week</th>
+                        <th class="border p-2 text-left">Hub</th>
+                        <th class="border p-2 text-left">Facility</th>
+                        <th class="border p-2 text-left">Reporter</th>
+                        <th class="border p-2 text-left">Clients Seen</th>
+                        <th class="border p-2 text-left">Due Delivery</th>
+                        <th class="border p-2 text-left">6MMD</th>
+                        <th class="border p-2 text-left">3-5MMD</th>
+                        <th class="border p-2 text-left">VL Due</th>
+                        <th class="border p-2 text-left">VL Collected</th>
+                        <th class="border p-2 text-left">TPT</th>
+                        <th class="border p-2 text-left">Home Del.</th>
+                        <th class="border p-2 text-left">Community</th>
+                        <th class="border p-2 text-left">Submitted</th>
+                        <th class="border p-2 text-left">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td colspan="15" class="border p-2 text-center">No reports available</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- Create User Modal -->
+    <section id="create-user-modal" class="modal bg-white rounded-lg shadow-lg p-6 w-full max-w-md fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+        <h2 class="text-xl font-bold text-blue-800 mb-4">× Create New User Account</h2>
+        <form id="createUserForm" action="/create-user" method="POST">
+            <input type="hidden" name="_csrf" value="csrf_token_value">
+            
+            <label for="full-name" class="block text-sm font-medium text-gray-700 mb-1">Full Name:</label>
+            <input type="text" id="full-name" name="full_name" required class="w-full p-2 border rounded-md mb-3 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            
+            <label for="new-username" class="block text-sm font-medium text-gray-700 mb-1">Username:</label>
+            <input type="text" id="new-username" name="username" required class="w-full p-2 border rounded-md mb-3 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            
+            <label for="hub" class="block text-sm font-medium text-gray-700 mb-1">Hub:</label>
+            <select id="hub" name="hub" required onchange="updateFacilities()" class="w-full p-2 border rounded-md mb-3 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <option value="">Select Hub</option>
+                <option value="Mansa">Mansa Hub</option>
+                <option value="Kawambwa">Kawambwa Hub</option>
+                <option value="Samfya">Samfya Hub</option>
+                <option value="Nchelenge">Nchelenge Hub</option>
+            </select>
+            
+            <label for="facility" class="block text-sm font-medium text-gray-700 mb-1">Facility:</label>
+            <select id="facility" name="facility" required class="w-full p-2 border rounded-md mb-3 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <option value="">First select hub</option>
+            </select>
+            
+            <label for="new-password" class="block text-sm font-medium text-gray-700 mb-1">Password:</label>
+            <input type="password" id="new-password" name="password" required class="w-full p-2 border rounded-md mb-3 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            
+            <label for="role" class="block text-sm font-medium text-gray-700 mb-1">Role:</label>
+            <select id="role" name="role" required class="w-full p-2 border rounded-md mb-3 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <option value="facility_user">Facility User</option>
+                <option value="administrator">Administrator</option>
+            </select>
+            
+            <div id="create-user-error" class="text-red-500 text-sm mb-3 hidden"></div>
+            
+            <div class="flex gap-2">
+                <button type="submit" class="w-full bg-blue-500 text-white p-2 rounded-md hover:bg-blue-600 transition">Create User Account</button>
+                <button type="button" onclick="hideModal()" class="w-full bg-gray-500 text-white p-2 rounded-md hover:bg-gray-600 transition">Cancel</button>
+            </div>
+        </form>
+    </section>
+
+    <script>
+        // Section navigation
+        function showSection(sectionId) {
+            document.querySelectorAll('section').forEach(section => {
+                section.classList.add('hidden');
+                section.classList.remove('fade-in');
+            });
+            const target = document.getElementById(sectionId);
+            target.classList.remove('hidden');
+            target.classList.add('fade-in');
+            if (sectionId !== 'create-user-modal') {
+                hideModal();
+            }
+        }
+
+        function hideModal() {
+            document.getElementById('create-user-modal').classList.remove('show');
+        }
+
+        // Facility population
+        function updateFacilities() {
+            const hub = document.getElementById('hub').value;
+            const facilitySelect = document.getElementById('facility');
+            facilitySelect.innerHTML = '<option value="">Select Facility</option>';
+            const facilities = {
+                'Mansa': ['Mansa Hospital', 'Mansa Clinic'],
+                'Kawambwa': ['Kawambwa Health Center'],
+                'Samfya': ['Samfya Clinic'],
+                'Nchelenge': ['Nchelenge Hospital']
+            };
+            if (facilities[hub]) {
+                facilities[hub].forEach(facility => {
+                    const option = document.createElement('option');
+                    option.value = facility;
+                    option.textContent = facility;
+                    facilitySelect.appendChild(option);
+                });
+            }
+        }
+
+        // Add commodity row
+        function addCommodityRow(tableId) {
+            const table = document.getElementById(tableId).querySelector('tbody');
+            const index = table.children.length;
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td class="border p-2"><input type="text" name="${tableId}[${index}][name]" required class="w-full p-1 border rounded"></td>
+                <td class="border p-2"><input type="number" name="${tableId}[${index}][opening_balance]" required min="0" class="w-full p-1 border rounded"></td>
+                <td class="border p-2"><input type="number" name="${tableId}[${index}][received]" required min="0" class="w-full p-1 border rounded"></td>
+                <td class="border p-2"><input type="number" name="${tableId}[${index}][used]" required min="0" class="w-full p-1 border rounded"></td>
+                <td class="border p-2"><input type="number" name="${tableId}[${index}][given_out]" required min="0" class="w-full p-1 border rounded"></td>
+                <td class="border p-2"><input type="number" name="${tableId}[${index}][current_balance]" required min="0" class="w-full p-1 border rounded"></td>
+            `;
+            table.appendChild(row);
+        }
+
+        // Login form submission
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const errorDiv = document.getElementById('login-error');
+            
+            try {
+                const response = await fetch('/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+                if (response.ok) {
+                    showSection('dashboard-section');
+                } else {
+                    errorDiv.textContent = 'Invalid username or password';
+                    errorDiv.classList.remove('hidden');
+                }
+            } catch (error) {
+                errorDiv.textContent = 'Error connecting to server';
+                errorDiv.classList.remove('hidden');
+            }
+        });
+
+        // Report form submission
+        document.getElementById('reportForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const errorDiv = document.getElementById('report-error');
+            try {
+                const response = await fetch('/submit-report', {
+                    method: 'POST',
+                    body: new FormData(document.getElementById('reportForm'))
+                });
+                if (response.ok) {
+                    alert('Report submitted successfully');
+                    showSection('reports-section');
+                } else {
+                    errorDiv.textContent = 'Failed to submit report';
+                    errorDiv.classList.remove('hidden');
+                }
+            } catch (error) {
+                errorDiv.textContent = 'Error connecting to server';
+                errorDiv.classList.remove('hidden');
+            }
+        });
+
+        // Create user form submission
+        document.getElementById('createUserForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const errorDiv = document.getElementById('create-user-error');
+            try {
+                const response = await fetch('/create-user', {
+                    method: 'POST',
+                    body: new FormData(document.getElementById('createUserForm'))
+                });
+                if (response.ok) {
+                    alert('User created successfully');
+                    hideModal();
+                    showSection('user-management-section');
+                } else {
+                    errorDiv.textContent = 'Failed to create user';
+                    errorDiv.classList.remove('hidden');
+                }
+            } catch (error) {
+                errorDiv.textContent = 'Error connecting to server';
+                errorDiv.classList.remove('hidden');
+            }
+        });
+    </script>
+</body>
+</html>
