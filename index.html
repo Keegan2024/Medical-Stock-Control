@@ -1,0 +1,1383 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ARV Stock Control System</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</head>
+<body class="bg-blue-100 font-sans">
+    <!-- Login Section -->
+    <section id="login-section" class="min-h-screen flex items-center justify-center">
+        <div class="bg-white p-8 rounded shadow-md w-full max-w-md">
+            <h1 class="text-2xl font-bold mb-4">🏥 ARV Stock Control System</h1>
+            <p class="mb-4">Luapula Province, Zambia</p>
+            <form id="login-form">
+                <div class="mb-4">
+                    <label class="block text-sm font-medium">Username:</label>
+                    <input type="text" id="username" class="w-full p-2 border rounded" required>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium">Password:</label>
+                    <input type="password" id="password" class="w-full p-2 border rounded" required>
+                </div>
+                <div class="flex justify-between">
+                    <button type="submit" class="bg-blue-500 text-white p-2 rounded">🔑 Login</button>
+                    <button type="button" onclick="showSection('signup-section')" class="bg-green-500 text-white p-2 rounded">📝 Sign Up</button>
+                </div>
+            </form>
+        </div>
+    </section>
+
+    <!-- Signup Modal -->
+    <section id="signup-section" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center">
+        <div class="bg-white p-8 rounded shadow-md w-full max-w-md">
+            <h2 class="text-xl font-bold mb-4">× Request Account</h2>
+            <form id="signup-form">
+                <div class="mb-4">
+                    <label class="block text-sm font-medium">Full Name:</label>
+                    <input type="text" id="signup-full-name" class="w-full p-2 border rounded" required>
+                    <label class="block text-sm font-medium">Username:</label>
+                    <input type="text" id="signup-username" class="w-full p-2 border rounded" required>
+                    <label class="block text-sm font-medium">Email:</label>
+                    <input type="email" id="signup-email" class="w-full p-2 border rounded" required>
+                    <label class="block text-sm font-medium">Hub:</label>
+                    <select id="signup-hub" class="w-full p-2 border rounded" required>
+                        <option value="">Select Hub</option>
+                    </select>
+                    <label class="block text-sm font-medium">Facility:</label>
+                    <select id="signup-facility" class="w-full p-2 border rounded" required>
+                        <option value="">Select Facility</option>
+                    </select>
+                    <label class="block text-sm font-medium">Password:</label>
+                    <input type="password" id="signup-password" class="w-full p-2 border rounded" required>
+                    <label class="block text-sm font-medium">Role:</label>
+                    <select id="signup-role" class="w-full p-2 border rounded" required>
+                        <option value="facility-user">Facility User</option>
+                        <option value="administrator">Administrator</option>
+                    </select>
+                </div>
+                <div class="flex justify-end">
+                    <button type="submit" class="bg-blue-500 text-white p-2 rounded mr-2">Request Account</button>
+                    <button type="button" onclick="showSection('login-section')" class="bg-gray-500 text-white p-2 rounded">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </section>
+
+    <!-- Dashboard Section -->
+    <section id="dashboard-section" class="hidden p-4">
+        <div class="flex justify-between items-center mb-4">
+            <h1 class="text-2xl font-bold">🏥 ARV Stock Control System</h1>
+            <div class="relative">
+                <button id="dropdown-button" class="bg-blue-500 text-white p-2 rounded">☰ Menu</button>
+                <div id="dropdown-menu" class="hidden absolute right-0 mt-2 w-48 bg-white border rounded shadow-lg">
+                    <input type="text" id="dropdown-search" class="w-full p-2 border-b" placeholder="Search pages...">
+                    <a href="#" data-section="dashboard-section" class="block p-2 hover:bg-gray-100">Dashboard</a>
+                    <a href="#" data-section="report-section" class="block p-2 hover:bg-gray-100">Submit ARV Report</a>
+                    <a href="#" data-section="view-reports-section" class="block p-2 hover:bg-gray-100">View Reports</a>
+                    <a href="#" data-section="user-management-section" class="admin-only block p-2 hover:bg-gray-100">User Management</a>
+                    <a href="#" data-section="admin-dashboard-section" class="admin-only block p-2 hover:bg-gray-100">Admin Dashboard</a>
+                    <a href="#" data-section="analytics-section" class="block p-2 hover:bg-gray-100">Commodity Analytics</a>
+                    <a href="#" data-section="facility-management-section" class="admin-only block p-2 hover:bg-gray-100">Manage Facilities</a>
+                </div>
+            </div>
+        </div>
+        <h2 class="text-xl mb-4">Weekly ARV Reporting & HIV Program Monitoring</h2>
+        <div class="grid grid-cols-3 gap-4 mb-4">
+            <div class="bg-white p-4 rounded shadow">
+                <h3>Total Reports</h3>
+                <p id="total-reports">0</p>
+            </div>
+            <div class="bg-white p-4 rounded shadow">
+                <h3>Total Facilities</h3>
+                <p id="total-facilities">0</p>
+            </div>
+            <div class="bg-white p-4 rounded shadow">
+                <h3>Total Users</h3>
+                <p id="total-users">0</p>
+            </div>
+        </div>
+        <button id="logout-button" class="bg-red-500 text-white p-2 rounded">🚪 Logout</button>
+        <div class="mt-4 grid grid-cols-2 gap-4">
+            <button onclick="showSection('report-section')" class="bg-blue-500 text-white p-2 rounded">📝 Submit ARV Report</button>
+            <button onclick="showSection('view-reports-section')" class="bg-blue-500 text-white p-2 rounded">📊 View Reports</button>
+            <button onclick="showSection('user-management-section')" class="admin-only bg-blue-500 text-white p-2 rounded">👥 User Management</button>
+            <button onclick="showSection('admin-dashboard-section')" class="admin-only bg-blue-500 text-white p-2 rounded">⚙️ Admin Dashboard</button>
+            <button onclick="showSection('analytics-section')" class="bg-blue-500 text-white p-2 rounded">📈 Commodity Analytics</button>
+            <button onclick="showSection('facility-management-section')" class="admin-only bg-blue-500 text-white p-2 rounded">🏢 Manage Facilities</button>
+        </div>
+    </section>
+
+    <!-- Report Submission Section -->
+    <section id="report-section" class="hidden p-4">
+        <button onclick="showSection('dashboard-section')" class="mb-4 bg-gray-500 text-white p-2 rounded">⬅ Back to Dashboard</button>
+        <h2 class="text-xl mb-4">📝 Weekly ARV Stock & Program Report</h2>
+        <form id="report-form">
+            <div class="mb-4">
+                <h3>📅 Report Information</h3>
+                <label class="block text-sm font-medium">Report Week:</label>
+                <input type="week" id="report-week" class="w-full p-2 border rounded" required>
+                <label class="block text-sm font-medium">Facility:</label>
+                <select id="facility" class="w-full p-2 border rounded" required>
+                    <option value="">Select Facility</option>
+                </select>
+                <label class="block text-sm font-medium">Reporter Name:</label>
+                <input type="text" id="reporter-name" class="w-full p-2 border rounded" required>
+            </div>
+            <div class="mb-4">
+                <h3>💊 ARV Commodities Stock Report</h3>
+                <button type="button" id="add-arv-commodity" class="bg-green-500 text-white p-2 rounded">➕ Add ARV Commodity</button>
+                <select id="arv-commodity-list" class="w-full p-2 border rounded mb-2" required>
+                    <option value="">Select Commodity</option>
+                </select>
+                <table id="arv-table" class="w-full border-collapse">
+                    <thead>
+                        <tr>
+                            <th>Commodity</th>
+                            <th>Opening Balance</th>
+                            <th>Received</th>
+                            <th>Used</th>
+                            <th>Given Out</th>
+                            <th>Current Balance</th>
+                            <th>Expiry Date</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+            <div class="mb-4">
+                <h3>🧪 HIV Testing Commodities</h3>
+                <button type="button" id="add-test-commodity" class="bg-green-500 text-white p-2 rounded">➕ Add Test Commodity</button>
+                <select id="test-commodity-list" class="w-full p-2 border rounded mb-2" required>
+                    <option value="">Select Commodity</option>
+                </select>
+                <table id="test-table" class="w-full border-collapse">
+                    <thead>
+                        <tr>
+                            <th>Commodity</th>
+                            <th>Opening Balance</th>
+                            <th>Received</th>
+                            <th>Used</th>
+                            <th>Given Out</th>
+                            <th>Current Balance</th>
+                            <th>Expiry Date</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+            <div class="mb-4">
+                <h3>📊 HIV Program Metrics</h3>
+                <label class="block text-sm font-medium">Total Clients Seen:</label>
+                <input type="number" id="clients-seen" class="w-full p-2 border rounded" min="0" required>
+                <h4>Drug Delivery Schedule</h4>
+                <label class="block text-sm font-medium">Due for Drug Delivery:</label>
+                <input type="number" id="due-delivery" class="w-full p-2 border rounded" min="0" required>
+                <label class="block text-sm font-medium">6MMD (6-month multi-month dispensing):</label>
+                <input type="number" id="6mmd" class="w-full p-2 border rounded" min="0" required>
+                <label class="block text-sm font-medium">3-5MMD:</label>
+                <input type="number" id="3-5mmd" class="w-full p-2 border rounded" min="0" required>
+                <label class="block text-sm font-medium">Less than 3MMD:</label>
+                <input type="number" id="less-3mmd" class="w-full p-2 border rounded" min="0" required>
+                <h4>Viral Load Monitoring</h4>
+                <label class="block text-sm font-medium">Clients Due for VL:</label>
+                <input type="number" id="vl-due" class="w-full p-2 border rounded" min="0" required>
+                <label class="block text-sm font-medium">VL Collected (from those due):</label>
+                <input type="number" id="vl-collected" class="w-full p-2 border rounded" min="0" required>
+                <h4>TPT & Community Activities</h4>
+                <label class="block text-sm font-medium">TPT Initiations:</label>
+                <input type="number" id="tpt-initiations" class="w-full p-2 border rounded" min="0" required>
+                <label class="block text-sm font-medium">Home Deliveries:</label>
+                <input type="number" id="home-deliveries" class="w-full p-2 border rounded" min="0" required>
+                <label class="block text-sm font-medium">Community Activities:</label>
+                <input type="number" id="community-activities" class="w-full p-2 border rounded" min="0" required>
+                <h4>📝 Additional Information</h4>
+                <label class="block text-sm font-medium">Remarks/Notes:</label>
+                <textarea id="remarks" class="w-full p-2 border rounded"></textarea>
+            </div>
+            <button type="submit" class="bg-blue-500 text-white p-2 rounded">💾 Submit Report</button>
+        </form>
+    </section>
+
+    <!-- View Reports Section -->
+    <section id="view-reports-section" class="hidden p-4">
+        <button onclick="showSection('dashboard-section')" class="mb-4 bg-gray-500 text-white p-2 rounded">⬅ Back to Dashboard</button>
+        <h2 class="text-xl mb-4">📊 ARV Stock Reports</h2>
+        <div class="mb-4 flex gap-4">
+            <select id="report-province-filter" class="p-2 border rounded">
+                <option value="">All Provinces</option>
+            </select>
+            <select id="report-hub-filter" class="p-2 border rounded">
+                <option value="">All Hubs</option>
+            </select>
+            <select id="report-district-filter" class="p-2 border rounded">
+                <option value="">All Districts</option>
+            </select>
+            <select id="report-facility-filter" class="p-2 border rounded">
+                <option value="">All Facilities</option>
+            </select>
+        </div>
+        <button id="download-reports-pdf" class="bg-blue-500 text-white p-2 rounded mb-2">Download PDF</button>
+        <button id="download-reports-excel" class="bg-blue-500 text-white p-2 rounded mb-2">Download Excel</button>
+        <table id="reports-table" class="w-full border-collapse">
+            <thead>
+                <tr>
+                    <th>Week</th>
+                    <th>Hub</th>
+                    <th>Facility</th>
+                    <th>Reporter</th>
+                    <th>Clients Seen</th>
+                    <th>Due for Delivery</th>
+                    <th>6MMD</th>
+                    <th>3-5MMD</th>
+                    <th>VL Due</th>
+                    <th>VL Collected</th>
+                    <th>TPT Initiations</th>
+                    <th>Submitted</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td colspan="13">No reports submitted yet</td></tr>
+            </tbody>
+        </table>
+    </section>
+
+    <!-- User Management Section -->
+    <section id="user-management-section" class="hidden p-4">
+        <button onclick="showSection('create-user-section')" class="bg-green-500 text-white p-2 rounded mb-4">➕ Create New User</button>
+        <button onclick="showSection('dashboard-section')" class="bg-gray-500 text-white p-2 rounded mb-4">⬅ Back to Dashboard</button>
+        <table id="users-table" class="w-full border-collapse">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Hub</th>
+                    <th>Facility</th>
+                    <th>Role</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </section>
+
+    <!-- Admin Dashboard Section -->
+    <section id="admin-dashboard-section" class="hidden p-4">
+        <button onclick="showSection('dashboard-section')" class="mb-4 bg-gray-500 text-white p-2 rounded">⬅ Back to Dashboard</button>
+        <h2 class="text-xl mb-4">⚙️ Provincial Administrator Dashboard</h2>
+        <h3 class="text-lg font-semibold mb-2">Account Requests</h3>
+        <table id="account-requests-table" class="w-full border-collapse mb-4">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Username</th>
+                    <th>Hub</th>
+                    <th>Facility</th>
+                    <th>Role</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+        <h3 class="text-lg font-semibold mb-2">New Reports</h3>
+        <table id="new-reports-table" class="w-full border-collapse mb-4">
+            <thead>
+                <tr>
+                    <th>Week</th>
+                    <th>Hub</th>
+                    <th>Facility</th>
+                    <th>Reporter</th>
+                    <th>Submitted</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+        <div class="admin-only">
+            <h3 class="text-lg font-semibold mb-2">Manage Commodities</h3>
+            <p class="mb-2 text-sm">Add or remove ARV drugs and HIV testing commodities to be used in reports.</p>
+            <button onclick="showSection('add-commodity-section')" class="bg-green-500 text-white p-2 rounded mb-4 hover:bg-green-600">➕ Add New Commodity</button>
+            <table id="commodities-management-table" class="w-full border-collapse mb-4">
+                <thead>
+                    <tr>
+                        <th class="border p-2">Type</th>
+                        <th class="border p-2">Name</th>
+                        <th class="border p-2">Actions</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+        <h3 class="text-lg font-semibold mb-2">All Commodities</h3>
+        <select id="commodity-filter" class="w-full p-2 border rounded mb-2">
+            <option value="all">All</option>
+            <option value="facility">By Facility</option>
+            <option value="hub">By Hub</option>
+            <option value="district">By District</option>
+        </select>
+        <button id="download-commodities-pdf" class="bg-blue-500 text-white p-2 rounded mb-2">Download PDF</button>
+        <button id="download-commodities-excel" class="bg-blue-500 text-white p-2 rounded mb-2">Download Excel</button>
+        <table id="commodities-table" class="w-full border-collapse">
+            <thead>
+                <tr>
+                    <th>Commodity</th>
+                    <th>Facility</th>
+                    <th>Current Balance</th>
+                    <th>Expiry Status</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </section>
+
+    <!-- Commodity Analytics Section -->
+    <section id="analytics-section" class="hidden p-4">
+        <button onclick="showSection('dashboard-section')" class="mb-4 bg-gray-500 text-white p-2 rounded">⬅ Back to Dashboard</button>
+        <h2 class="text-xl mb-4">📈 Commodity Analytics</h2>
+        <div class="mb-4 flex gap-4">
+            <select id="analytics-province-filter" class="p-2 border rounded">
+                <option value="">All Provinces</option>
+            </select>
+            <select id="analytics-hub-filter" class="p-2 border rounded">
+                <option value="">All Hubs</option>
+            </select>
+            <select id="analytics-district-filter" class="p-2 border rounded">
+                <option value="">All Districts</option>
+            </select>
+            <select id="analytics-facility-filter" class="p-2 border rounded">
+                <option value="">All Facilities</option>
+            </select>
+        </div>
+        <h3>💊 ARV Commodities</h3>
+        <button id="download-arv-analytics-pdf" class="bg-blue-500 text-white p-2 rounded mb-2">Download PDF</button>
+        <button id="download-arv-analytics-excel" class="bg-blue-500 text-white p-2 rounded mb-2">Download Excel</button>
+        <table id="arv-analytics-table" class="w-full border-collapse">
+            <thead>
+                <tr>
+                    <th>Commodity</th>
+                    <th>Facility</th>
+                    <th>Opening Balance</th>
+                    <th>Received</th>
+                    <th>Used</th>
+                    <th>Given Out</th>
+                    <th>Current Balance</th>
+                    <th>Expiry Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td colspan="8">No ARV commodities reported</td></tr>
+            </tbody>
+        </table>
+        <h3>🧪 HIV Testing Commodities</h3>
+        <button id="download-test-analytics-pdf" class="bg-blue-500 text-white p-2 rounded mb-2">Download PDF</button>
+        <button id="download-test-analytics-excel" class="bg-blue-500 text-white p-2 rounded mb-2">Download Excel</button>
+        <table id="test-analytics-table" class="w-full border-collapse">
+            <thead>
+                <tr>
+                    <th>Commodity</th>
+                    <th>Facility</th>
+                    <th>Opening Balance</th>
+                    <th>Received</th>
+                    <th>Used</th>
+                    <th>Given Out</th>
+                    <th>Current Balance</th>
+                    <th>Expiry Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td colspan="8">No test commodities reported</td></tr>
+            </tbody>
+        </table>
+    </section>
+
+    <!-- Facility Management Section -->
+    <section id="facility-management-section" class="hidden p-4">
+        <button onclick="showSection('add-facility-section')" class="bg-green-500 text-white p-2 rounded mb-4">➕ Add New Facility</button>
+        <button onclick="showSection('dashboard-section')" class="bg-gray-500 text-white p-2 rounded mb-4">⬅ Back to Dashboard</button>
+        <table id="facilities-table" class="w-full border-collapse">
+            <thead>
+                <tr>
+                    <th>Province</th>
+                    <th>Hub</th>
+                    <th>District</th>
+                    <th>Facility</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </section>
+
+    <!-- Create User Modal -->
+    <section id="create-user-section" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center">
+        <div class="bg-white p-8 rounded shadow-md w-full max-w-md">
+            <h2 class="text-xl font-bold mb-4">× Create New User Account</h2>
+            <form id="create-user-form">
+                <div class="mb-4">
+                    <label class="block text-sm font-medium">Full Name:</label>
+                    <input type="text" id="user-full-name" class="w-full p-2 border rounded" required>
+                    <label class="block text-sm font-medium">Username:</label>
+                    <input type="text" id="user-username" class="w-full p-2 border rounded" required>
+                    <label class="block text-sm font-medium">Email:</label>
+                    <input type="email" id="user-email" class="w-full p-2 border rounded" required>
+                    <label class="block text-sm font-medium">Hub:</label>
+                    <select id="user-hub" class="w-full p-2 border rounded" required>
+                        <option value="">Select Hub</option>
+                    </select>
+                    <label class="block text-sm font-medium">Facility:</label>
+                    <select id="user-facility" class="w-full p-2 border rounded" required>
+                        <option value="">Select Facility</option>
+                    </select>
+                    <label class="block text-sm font-medium">Password:</label>
+                    <input type="password" id="user-password" class="w-full p-2 border rounded" required>
+                    <label class="block text-sm font-medium">Role:</label>
+                    <select id="user-role" class="w-full p-2 border rounded" required>
+                        <option value="facility-user">Facility User</option>
+                        <option value="administrator">Administrator</option>
+                    </select>
+                </div>
+                <div class="flex justify-end">
+                    <button type="submit" class="bg-blue-500 text-white p-2 rounded mr-2">Create User</button>
+                    <button type="button" onclick="showSection('user-management-section')" class="bg-gray-500 text-white p-2 rounded">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </section>
+
+    <!-- Add Facility Modal -->
+    <section id="add-facility-section" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center">
+        <div class="bg-white p-8 rounded shadow-md w-full max-w-md">
+            <h2 class="text-xl font-bold mb-4">× Add New Facility</h2>
+            <form id="add-facility-form">
+                <div class="mb-4">
+                    <label class="block text-sm font-medium">Province:</label>
+                    <input type="text" id="facility-province" class="w-full p-2 border rounded" required>
+                    <label class="block text-sm font-medium">Hub:</label>
+                    <input type="text" id="facility-hub" class="w-full p-2 border rounded" required>
+                    <label class="block text-sm font-medium">District:</label>
+                    <input type="text" id="facility-district" class="w-full p-2 border rounded" required>
+                    <label class="block text-sm font-medium">Facility Name:</label>
+                    <input type="text" id="facility-name" class="w-full p-2 border rounded" required>
+                </div>
+                <div class="flex justify-end">
+                    <button type="submit" class="bg-blue-500 text-white p-2 rounded mr-2">Add Facility</button>
+                    <button type="button" onclick="showSection('facility-management-section')" class="bg-gray-500 text-white p-2 rounded">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </section>
+
+    <!-- Add Commodity Modal -->
+    <section id="add-commodity-section" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center">
+        <div class="bg-white p-8 rounded shadow-md w-full max-w-md">
+            <h2 class="text-xl font-bold mb-4">× Add New Commodity</h2>
+            <form id="add-commodity-form">
+                <div class="mb-4">
+                    <label class="block text-sm font-medium">Commodity Type:</label>
+                    <select id="commodity-type" class="w-full p-2 border rounded" required>
+                        <option value="arv">ARV Commodity</option>
+                        <option value="test">HIV Testing Commodity</option>
+                    </select>
+                    <label class="block text-sm font-medium">Commodity Name:</label>
+                    <input type="text" id="commodity-name" class="w-full p-2 border rounded" required>
+                </div>
+                <div class="flex justify-end">
+                    <button type="submit" class="bg-blue-500 text-white p-2 rounded mr-2">Add Commodity</button>
+                    <button type="button" onclick="showSection('admin-dashboard-section')" class="bg-gray-500 text-white p-2 rounded">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </section>
+
+    <script>
+        // Simulated database with default admin
+        let db = {
+            users: [
+                { 
+                    username: "admin", 
+                    password: "admin123", 
+                    email: "admin@example.com", 
+                    hub: "Hub1", 
+                    facility: "Facility1", 
+                    role: "administrator", 
+                    status: "active" 
+                }
+            ],
+            accountRequests: [],
+            facilities: [{ province: "Luapula", hub: "Hub1", district: "District1", name: "Facility1" }],
+            commodities: { arv: [], test: [] },
+            reports: [],
+            newReports: [],
+        };
+
+        // Session Management
+        function checkSession() {
+            const user = localStorage.getItem('loggedInUser');
+            if (user) {
+                const parsedUser = JSON.parse(user);
+                showSection('dashboard-section');
+                // Show/hide admin-only elements based on user role
+                const adminElements = document.querySelectorAll('.admin-only');
+                adminElements.forEach(el => {
+                    el.style.display = parsedUser.role === 'administrator' ? 'block' : 'none';
+                });
+            } else {
+                showSection('login-section');
+                updateSignupDropdowns();
+            }
+        }
+
+        // Show specific section with role-based access
+        function showSection(sectionId) {
+            const user = JSON.parse(localStorage.getItem('loggedInUser'));
+            const restrictedSections = ['user-management-section', 'admin-dashboard-section', 'facility-management-section', 'create-user-section', 'add-facility-section', 'add-commodity-section'];
+            if (restrictedSections.includes(sectionId) && (!user || user.role !== 'administrator')) {
+                alert('Access restricted to administrators');
+                return;
+            }
+            document.querySelectorAll('section').forEach(section => {
+                section.classList.add('hidden');
+            });
+            document.getElementById(sectionId).classList.remove('hidden');
+        }
+
+        // Populate Signup and Report Dropdowns
+        function updateSignupDropdowns() {
+            const hubSelect = document.getElementById('signup-hub');
+            const facilitySelect = document.getElementById('signup-facility');
+            const reportFacilitySelect = document.getElementById('facility');
+            const userHubSelect = document.getElementById('user-hub');
+            const userFacilitySelect = document.getElementById('user-facility');
+            const reportProvinceFilter = document.getElementById('report-province-filter');
+            const reportHubFilter = document.getElementById('report-hub-filter');
+            const reportDistrictFilter = document.getElementById('report-district-filter');
+            const reportFacilityFilter = document.getElementById('report-facility-filter');
+            const analyticsProvinceFilter = document.getElementById('analytics-province-filter');
+            const analyticsHubFilter = document.getElementById('analytics-hub-filter');
+            const analyticsDistrictFilter = document.getElementById('analytics-district-filter');
+            const analyticsFacilityFilter = document.getElementById('analytics-facility-filter');
+
+            // Get unique hubs, provinces, districts, and facilities
+            const hubs = [...new Set(db.facilities.map(f => f.hub))];
+            const provinces = [...new Set(db.facilities.map(f => f.province))];
+            const districts = [...new Set(db.facilities.map(f => f.district))];
+            const facilities = db.facilities.map(f => f.name);
+
+            hubSelect.innerHTML = '<option value="">Select Hub</option>';
+            facilitySelect.innerHTML = '<option value="">Select Facility</option>';
+            reportFacilitySelect.innerHTML = '<option value="">Select Facility</option>';
+            userHubSelect.innerHTML = '<option value="">Select Hub</option>';
+            userFacilitySelect.innerHTML = '<option value="">Select Facility</option>';
+            reportProvinceFilter.innerHTML = '<option value="">All Provinces</option>';
+            reportHubFilter.innerHTML = '<option value="">All Hubs</option>';
+            reportDistrictFilter.innerHTML = '<option value="">All Districts</option>';
+            reportFacilityFilter.innerHTML = '<option value="">All Facilities</option>';
+            analyticsProvinceFilter.innerHTML = '<option value="">All Provinces</option>';
+            analyticsHubFilter.innerHTML = '<option value="">All Hubs</option>';
+            analyticsDistrictFilter.innerHTML = '<option value="">All Districts</option>';
+            analyticsFacilityFilter.innerHTML = '<option value="">All Facilities</option>';
+
+            hubs.forEach(hub => {
+                hubSelect.innerHTML += `<option value="${hub}">${hub}</option>`;
+                userHubSelect.innerHTML += `<option value="${hub}">${hub}</option>`;
+                reportHubFilter.innerHTML += `<option value="${hub}">${hub}</option>`;
+                analyticsHubFilter.innerHTML += `<option value="${hub}">${hub}</option>`;
+            });
+            facilities.forEach(facility => {
+                facilitySelect.innerHTML += `<option value="${facility}">${facility}</option>`;
+                reportFacilitySelect.innerHTML += `<option value="${facility}">${facility}</option>`;
+                userFacilitySelect.innerHTML += `<option value="${facility}">${facility}</option>`;
+                reportFacilityFilter.innerHTML += `<option value="${facility}">${facility}</option>`;
+                analyticsFacilityFilter.innerHTML += `<option value="${facility}">${facility}</option>`;
+            });
+            provinces.forEach(province => {
+                reportProvinceFilter.innerHTML += `<option value="${province}">${province}</option>`;
+                analyticsProvinceFilter.innerHTML += `<option value="${province}">${province}</option>`;
+            });
+            districts.forEach(district => {
+                reportDistrictFilter.innerHTML += `<option value="${district}">${district}</option>`;
+                analyticsDistrictFilter.innerHTML += `<option value="${district}">${district}</option>`;
+            });
+        }
+
+        // Login Form
+        document.getElementById('login-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const user = db.users.find(u => u.username === username && u.password === password);
+            if (user) {
+                localStorage.setItem('loggedInUser', JSON.stringify(user));
+                showSection('dashboard-section');
+                updateDashboard();
+            } else {
+                alert('Invalid credentials');
+            }
+        });
+
+        // Signup Form
+        document.getElementById('signup-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const request = {
+                fullName: document.getElementById('signup-full-name').value,
+                username: document.getElementById('signup-username').value,
+                email: document.getElementById('signup-email').value,
+                hub: document.getElementById('signup-hub').value,
+                facility: document.getElementById('signup-facility').value,
+                password: document.getElementById('signup-password').value,
+                role: document.getElementById('signup-role').value,
+                status: 'pending',
+            };
+            if (!db.facilities.find(f => f.hub === request.hub && f.name === request.facility)) {
+                alert('Invalid hub or facility selected');
+                return;
+            }
+            db.accountRequests.push(request);
+            updateAccountRequestsTable();
+            alert('Account request submitted. Please wait for admin approval.');
+            showSection('login-section');
+        });
+
+        // Logout
+        document.getElementById('logout-button').addEventListener('click', function() {
+            localStorage.removeItem('loggedInUser');
+            showSection('login-section');
+        });
+
+        // Dropdown Menu with Search
+        document.getElementById('dropdown-button').addEventListener('click', function() {
+            const menu = document.getElementById('dropdown-menu');
+            const user = JSON.parse(localStorage.getItem('loggedInUser'));
+            const adminLinks = menu.querySelectorAll('.admin-only');
+            adminLinks.forEach(link => {
+                link.style.display = user && user.role === 'administrator' ? 'block' : 'none';
+            });
+            menu.classList.toggle('hidden');
+        });
+
+        document.getElementById('dropdown-search').addEventListener('input', function(e) {
+            const search = e.target.value.toLowerCase();
+            document.querySelectorAll('#dropdown-menu a').forEach(link => {
+                const text = link.textContent.toLowerCase();
+                const isAdminLink = link.classList.contains('admin-only');
+                const user = JSON.parse(localStorage.getItem('loggedInUser'));
+                if (isAdminLink && (!user || user.role !== 'administrator')) {
+                    link.style.display = 'none';
+                } else {
+                    link.style.display = text.includes(search) ? 'block' : 'none';
+                }
+            });
+        });
+
+        // Dropdown Navigation
+        document.querySelectorAll('#dropdown-menu a').forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                const sectionId = this.getAttribute('data-section');
+                showSection(sectionId);
+                document.getElementById('dropdown-menu').classList.add('hidden');
+            });
+        });
+
+        // Update Dashboard Counts
+        function updateDashboard() {
+            document.getElementById('total-reports').textContent = db.reports.length;
+            document.getElementById('total-facilities').textContent = db.facilities.length;
+            document.getElementById('total-users').textContent = db.users.length;
+        }
+
+        // Update Account Requests Table
+        function updateAccountRequestsTable() {
+            const tbody = document.getElementById('account-requests-table').querySelector('tbody');
+            tbody.innerHTML = '';
+            db.accountRequests.forEach(request => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${request.fullName}</td>
+                        <td>${request.email}</td>
+                        <td>${request.username}</td>
+                        <td>${request.hub}</td>
+                        <td>${request.facility}</td>
+                        <td>${request.role}</td>
+                        <td>
+                            <button onclick="approveAccount('${request.username}')" class="bg-green-500 text-white p-1 rounded">Approve</button>
+                            <button onclick="rejectAccount('${request.username}')" class="bg-red-500 text-white p-1 rounded">Reject</button>
+                        </td>
+                    </tr>`;
+            });
+        }
+
+        // Approve/Reject Account
+        function approveAccount(username) {
+            const request = db.accountRequests.find(r => r.username === username);
+            if (request) {
+                db.users.push({
+                    username: request.username,
+                    password: request.password,
+                    email: request.email,
+                    hub: request.hub,
+                    facility: request.facility,
+                    role: request.role,
+                    status: 'active',
+                });
+                db.accountRequests = db.accountRequests.filter(r => r.username !== username);
+                updateAccountRequestsTable();
+                updateDashboard();
+                alert(`Account for ${username} approved`);
+            }
+        }
+
+        function rejectAccount(username) {
+            db.accountRequests = db.accountRequests.filter(r => r.username !== username);
+            updateAccountRequestsTable();
+            alert(`Account request for ${username} rejected`);
+        }
+
+        // Commodity Management
+        function populateCommodityLists() {
+            const arvSelect = document.getElementById('arv-commodity-list');
+            const testSelect = document.getElementById('test-commodity-list');
+            arvSelect.innerHTML = '<option value="">Select Commodity</option>';
+            testSelect.innerHTML = '<option value="">Select Commodity</option>';
+            db.commodities.arv.forEach(com => {
+                arvSelect.innerHTML += `<option value="${com}">${com}</option>`;
+            });
+            db.commodities.test.forEach(com => {
+                testSelect.innerHTML += `<option value="${com}">${com}</option>`;
+            });
+        }
+
+        function updateCommoditiesManagementTable() {
+            const tbody = document.getElementById('commodities-management-table').querySelector('tbody');
+            tbody.innerHTML = '';
+            if (db.commodities.arv.length === 0 && db.commodities.test.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="3" class="border p-2 text-center">No commodities added yet</td></tr>';
+                return;
+            }
+            db.commodities.arv.forEach(com => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td class="border p-2">ARV</td>
+                        <td class="border p-2">${com}</td>
+                        <td class="border p-2"><button onclick="deleteCommodity('arv', '${com}')" class="bg-red-500 text-white p-1 rounded hover:bg-red-600">Delete</button></td>
+                    </tr>`;
+            });
+            db.commodities.test.forEach(com => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td class="border p-2">HIV Test</td>
+                        <td class="border p-2">${com}</td>
+                        <td class="border p-2"><button onclick="deleteCommodity('test', '${com}')" class="bg-red-500 text-white p-1 rounded hover:bg-red-600">Delete</button></td>
+                    </tr>`;
+            });
+        }
+
+        function deleteCommodity(type, name) {
+            db.commodities[type] = db.commodities[type].filter(com => com !== name);
+            populateCommodityLists();
+            updateCommoditiesManagementTable();
+            alert(`Commodity ${name} deleted`);
+        }
+
+        document.getElementById('add-arv-commodity').addEventListener('click', function() {
+            const commodity = document.getElementById('arv-commodity-list').value;
+            if (!commodity) {
+                alert('Please select an ARV commodity');
+                return;
+            }
+            const table = document.getElementById('arv-table').querySelector('tbody');
+            table.innerHTML += `
+                <tr>
+                    <td>${commodity}</td>
+                    <td><input type="number" class="w-full p-1 border" min="0" required></td>
+                    <td><input type="number" class="w-full p-1 border" min="0" required></td>
+                    <td><input type="number" class="w-full p-1 border" min="0" required></td>
+                    <td><input type="number" class="w-full p-1 border" min="0" required></td>
+                    <td><input type="number" class="w-full p-1 border" min="0" required></td>
+                    <td><input type="date" class="w-full p-1 border" required></td>
+                </tr>`;
+        });
+
+        document.getElementById('add-test-commodity').addEventListener('click', function() {
+            const commodity = document.getElementById('test-commodity-list').value;
+            if (!commodity) {
+                alert('Please select an HIV testing commodity');
+                return;
+            }
+            const table = document.getElementById('test-table').querySelector('tbody');
+            table.innerHTML += `
+                <tr>
+                    <td>${commodity}</td>
+                    <td><input type="number" class="w-full p-1 border" min="0" required></td>
+                    <td><input type="number" class="w-full p-1 border" min="0" required></td>
+                    <td><input type="number" class="w-full p-1 border" min="0" required></td>
+                    <td><input type="number" class="w-full p-1 border" min="0" required></td>
+                    <td><input type="number" class="w-full p-1 border" min="0" required></td>
+                    <td><input type="date" class="w-full p-1 border" required></td>
+                </tr>`;
+        });
+
+        // Report Submission with Validation
+        document.getElementById('report-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const facility = document.getElementById('facility').value;
+            const facilityData = db.facilities.find(f => f.name === facility);
+            const report = {
+                week: document.getElementById('report-week').value,
+                province: facilityData ? facilityData.province : '',
+                hub: facilityData ? facilityData.hub : '',
+                district: facilityData ? facilityData.district : '',
+                facility: facility,
+                reporter: document.getElementById('reporter-name').value,
+                clientsSeen: parseInt(document.getElementById('clients-seen').value),
+                dueDelivery: parseInt(document.getElementById('due-delivery').value),
+                sixMMD: parseInt(document.getElementById('6mmd').value),
+                threeToFiveMMD: parseInt(document.getElementById('3-5mmd').value),
+                lessThreeMMD: parseInt(document.getElementById('less-3mmd').value),
+                vlDue: parseInt(document.getElementById('vl-due').value),
+                vlCollected: parseInt(document.getElementById('vl-collected').value),
+                tptInitiations: parseInt(document.getElementById('tpt-initiations').value),
+                homeDeliveries: parseInt(document.getElementById('home-deliveries').value),
+                communityActivities: parseInt(document.getElementById('community-activities').value),
+                remarks: document.getElementById('remarks').value,
+                submitted: new Date().toISOString(),
+                arvCommodities: [],
+                testCommodities: [],
+            };
+
+            // Validate at least one commodity
+            const arvRows = document.getElementById('arv-table').querySelectorAll('tbody tr');
+            const testRows = document.getElementById('test-table').querySelectorAll('tbody tr');
+            if (arvRows.length === 0 && testRows.length === 0) {
+                alert('Please add at least one ARV or HIV testing commodity');
+                return;
+            }
+
+            // Validate math: Current Balance = Opening Balance + Received - Used - Given Out
+            let valid = true;
+            arvRows.forEach(row => {
+                const inputs = row.querySelectorAll('input');
+                const opening = parseInt(inputs[0].value) || 0;
+                const received = parseInt(inputs[1].value) || 0;
+                const used = parseInt(inputs[2].value) || 0;
+                const givenOut = parseInt(inputs[3].value) || 0;
+                const current = parseInt(inputs[4].value) || 0;
+                if (current !== opening + received - used - givenOut) {
+                    alert(`Invalid balance for ARV commodity ${row.cells[0].textContent}`);
+                    valid = false;
+                    return;
+                }
+                report.arvCommodities.push({
+                    commodity: row.cells[0].textContent,
+                    opening, received, used, givenOut, current,
+                    expiry: inputs[5].value,
+                });
+            });
+
+            if (!valid) return;
+
+            testRows.forEach(row => {
+                const inputs = row.querySelectorAll('input');
+                const opening = parseInt(inputs[0].value) || 0;
+                const received = parseInt(inputs[1].value) || 0;
+                const used = parseInt(inputs[2].value) || 0;
+                const givenOut = parseInt(inputs[3].value) || 0;
+                const current = parseInt(inputs[4].value) || 0;
+                if (current !== opening + received - used - givenOut) {
+                    alert(`Invalid balance for HIV testing commodity ${row.cells[0].textContent}`);
+                    valid = false;
+                    return;
+                }
+                report.testCommodities.push({
+                    commodity: row.cells[0].textContent,
+                    opening, received, used, givenOut, current,
+                    expiry: inputs[5].value,
+                });
+            });
+
+            if (!valid) return;
+
+            db.reports.push(report);
+            db.newReports.push(report);
+            updateReportsTable();
+            updateNewReportsTable();
+            updateAnalyticsTables();
+            showSection('dashboard-section');
+            alert('Report submitted successfully');
+        });
+
+        // Update Reports Table
+        function updateReportsTable() {
+            const provinceFilter = document.getElementById('report-province-filter').value;
+            const hubFilter = document.getElementById('report-hub-filter').value;
+            const districtFilter = document.getElementById('report-district-filter').value;
+            const facilityFilter = document.getElementById('report-facility-filter').value;
+            const tbody = document.getElementById('reports-table').querySelector('tbody');
+            tbody.innerHTML = '';
+            const filteredReports = db.reports.filter(report => 
+                (!provinceFilter || report.province === provinceFilter) &&
+                (!hubFilter || report.hub === hubFilter) &&
+                (!districtFilter || report.district === districtFilter) &&
+                (!facilityFilter || report.facility === facilityFilter)
+            );
+            if (filteredReports.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="13">No reports match the selected filters</td></tr>';
+                return;
+            }
+            filteredReports.forEach(report => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${report.week}</td>
+                        <td>${report.hub}</td>
+                        <td>${report.facility}</td>
+                        <td>${report.reporter}</td>
+                        <td>${report.clientsSeen}</td>
+                        <td>${report.dueDelivery}</td>
+                        <td>${report.sixMMD}</td>
+                        <td>${report.threeToFiveMMD}</td>
+                        <td>${report.vlDue}</td>
+                        <td>${report.vlCollected}</td>
+                        <td>${report.tptInitiations}</td>
+                        <td>${report.submitted}</td>
+                        <td>
+                            <button onclick="commentReport('${report.week}')" class="bg-yellow-500 text-white p-1 rounded">Comment</button>
+                            <button onclick="acknowledgeReport('${report.week}')" class="bg-green-500 text-white p-1 rounded">Acknowledge</button>
+                            <button onclick="resendReport('${report.week}')" class="bg-red-500 text-white p-1 rounded">Resend</button>
+                        </td>
+                    </tr>`;
+            });
+        }
+
+        // Admin Actions
+        function commentReport(week) {
+            const comment = prompt('Enter comment:');
+            if (comment) {
+                alert(`Comment added to report for week ${week}`);
+            }
+        }
+
+        function acknowledgeReport(week) {
+            db.newReports = db.newReports.filter(r => r.week !== week);
+            updateNewReportsTable();
+            alert(`Report for week ${week} acknowledged`);
+        }
+
+        function resendReport(week) {
+            alert(`Report for week ${week} marked for resubmission`);
+        }
+
+        // Update New Reports Table
+        function updateNewReportsTable() {
+            const tbody = document.getElementById('new-reports-table').querySelector('tbody');
+            tbody.innerHTML = '';
+            db.newReports.forEach(report => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${report.week}</td>
+                        <td>${report.hub}</td>
+                        <td>${report.facility}</td>
+                        <td>${report.reporter}</td>
+                        <td>${report.submitted}</td>
+                        <td>
+                            <button onclick="commentReport('${report.week}')" class="bg-yellow-500 text-white p-1 rounded">Comment</button>
+                            <button onclick="acknowledgeReport('${report.week}')" class="bg-green-500 text-white p-1 rounded">Acknowledge</button>
+                            <button onclick="resendReport('${report.week}')" class="bg-red-500 text-white p-1 rounded">Resend</button>
+                        </td>
+                    </tr>`;
+            });
+        }
+
+        // Update Analytics Tables
+        function updateAnalyticsTables() {
+            const provinceFilter = document.getElementById('analytics-province-filter').value;
+            const hubFilter = document.getElementById('analytics-hub-filter').value;
+            const districtFilter = document.getElementById('analytics-district-filter').value;
+            const facilityFilter = document.getElementById('analytics-facility-filter').value;
+            const arvTbody = document.getElementById('arv-analytics-table').querySelector('tbody');
+            const testTbody = document.getElementById('test-analytics-table').querySelector('tbody');
+            arvTbody.innerHTML = '';
+            testTbody.innerHTML = '';
+            const filteredReports = db.reports.filter(report => 
+                (!provinceFilter || report.province === provinceFilter) &&
+                (!hubFilter || report.hub === hubFilter) &&
+                (!districtFilter || report.district === districtFilter) &&
+                (!facilityFilter || report.facility === facilityFilter)
+            );
+            if (filteredReports.length === 0) {
+                arvTbody.innerHTML = '<tr><td colspan="8">No ARV commodities match the selected filters</td></tr>';
+                testTbody.innerHTML = '<tr><td colspan="8">No test commodities match the selected filters</td></tr>';
+                return;
+            }
+            filteredReports.forEach(report => {
+                report.arvCommodities.forEach(com => {
+                    arvTbody.innerHTML += `
+                        <tr>
+                            <td>${com.commodity}</td>
+                            <td>${report.facility}</td>
+                            <td>${com.opening}</td>
+                            <td>${com.received}</td>
+                            <td>${com.used}</td>
+                            <td>${com.givenOut}</td>
+                            <td>${com.current}</td>
+                            <td>${new Date(com.expiry) < new Date() ? 'Expired' : 'Valid'}</td>
+                        </tr>`;
+                });
+                report.testCommodities.forEach(com => {
+                    testTbody.innerHTML += `
+                        <tr>
+                            <td>${com.commodity}</td>
+                            <td>${report.facility}</td>
+                            <td>${com.opening}</td>
+                            <td>${com.received}</td>
+                            <td>${com.used}</td>
+                            <td>${com.givenOut}</td>
+                            <td>${com.current}</td>
+                            <td>${new Date(com.expiry) < new Date() ? 'Expired' : 'Valid'}</td>
+                        </tr>`;
+                });
+            });
+        }
+
+        // Download Reports as PDF
+        document.getElementById('download-reports-pdf').addEventListener('click', function() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            doc.text('ARV Stock Reports', 10, 10);
+            let y = 20;
+            db.reports.forEach(report => {
+                doc.text(`Week: ${report.week}, Facility: ${report.facility}, Reporter: ${report.reporter}`, 10, y);
+                y += 10;
+            });
+            doc.save('reports.pdf');
+        });
+
+        // Download Reports as Excel
+        document.getElementById('download-reports-excel').addEventListener('click', function() {
+            const ws = XLSX.utils.json_to_sheet(db.reports);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'Reports');
+            XLSX.write(wb, 'reports.xlsx');
+        });
+
+        // Download Commodities as PDF
+        document.getElementById('download-commodities-pdf').addEventListener('click', function() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            doc.text('Commodities Report', 10, 10);
+            let y = 20;
+            db.reports.forEach(report => {
+                report.arvCommodities.concat(report.testCommodities).forEach(com => {
+                    doc.text(`Commodity: ${com.commodity}, Facility: ${report.facility}, Balance: ${com.current}`, 10, y);
+                    y += 10;
+                });
+            });
+            doc.save('commodities.pdf');
+        });
+
+        // Download Commodities as Excel
+        document.getElementById('download-commodities-excel').addEventListener('click', function() {
+            const data = [];
+            db.reports.forEach(report => {
+                report.arvCommodities.concat(report.testCommodities).forEach(com => {
+                    data.push({
+                        Commodity: com.commodity,
+                        Facility: report.facility,
+                        Balance: com.current,
+                        Expiry: com.expiry,
+                    });
+                });
+            });
+            const ws = XLSX.utils.json_to_sheet(data);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'Commodities');
+            XLSX.write(wb, 'commodities.xlsx');
+        });
+
+        // Download Analytics as PDF
+        document.getElementById('download-arv-analytics-pdf').addEventListener('click', function() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            doc.text('ARV Commodities Analytics', 10, 10);
+            let y = 20;
+            db.reports.forEach(report => {
+                report.arvCommodities.forEach(com => {
+                    doc.text(`Commodity: ${com.commodity}, Facility: ${report.facility}, Balance: ${com.current}`, 10, y);
+                    y += 10;
+                });
+            });
+            doc.save('arv_analytics.pdf');
+        });
+
+        document.getElementById('download-test-analytics-pdf').addEventListener('click', function() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            doc.text('HIV Testing Commodities Analytics', 10, 10);
+            let y = 20;
+            db.reports.forEach(report => {
+                report.testCommodities.forEach(com => {
+                    doc.text(`Commodity: ${com.commodity}, Facility: ${report.facility}, Balance: ${com.current}`, 10, y);
+                    y += 10;
+                });
+            });
+            doc.save('test_analytics.pdf');
+        });
+
+        // Download Analytics as Excel
+        document.getElementById('download-arv-analytics-excel').addEventListener('click', function() {
+            const data = [];
+            db.reports.forEach(report => {
+                report.arvCommodities.forEach(com => {
+                    data.push({
+                        Commodity: com.commodity,
+                        Facility: report.facility,
+                        Opening: com.opening,
+                        Received: com.received,
+                        Used: com.used,
+                        GivenOut: com.givenOut,
+                        Balance: com.current,
+                        Expiry: com.expiry,
+                    });
+                });
+            });
+            const ws = XLSX.utils.json_to_sheet(data);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'ARV Analytics');
+            XLSX.write(wb, 'arv_analytics.xlsx');
+        });
+
+        document.getElementById('download-test-analytics-excel').addEventListener('click', function() {
+            const data = [];
+            db.reports.forEach(report => {
+                report.testCommodities.forEach(com => {
+                    data.push({
+                        Commodity: com.commodity,
+                        Facility: report.facility,
+                        Opening: com.opening,
+                        Received: com.received,
+                        Used: com.used,
+                        GivenOut: com.givenOut,
+                        Balance: com.current,
+                        Expiry: com.expiry,
+                    });
+                });
+            });
+            const ws = XLSX.utils.json_to_sheet(data);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'Test Analytics');
+            XLSX.write(wb, 'test_analytics.xlsx');
+        });
+
+        // Commodity Filter
+        document.getElementById('commodity-filter').addEventListener('change', function(e) {
+            const filter = e.target.value;
+            const tbody = document.getElementById('commodities-table').querySelector('tbody');
+            tbody.innerHTML = '';
+            db.reports.forEach(report => {
+                report.arvCommodities.concat(report.testCommodities).forEach(com => {
+                    if (filter === 'all' || 
+                        (filter === 'facility' && com.facility === report.facility) || 
+                        (filter === 'hub' && com.hub === report.hub) || 
+                        (filter === 'district' && com.district === report.district)) {
+                        tbody.innerHTML += `
+                            <tr>
+                                <td>${com.commodity}</td>
+                                <td>${report.facility}</td>
+                                <td>${com.current}</td>
+                                <td>${new Date(com.expiry) < new Date() ? 'Expired' : 'Valid'}</td>
+                            </tr>`;
+                    }
+                });
+            });
+        });
+
+        // Report Filters
+        document.getElementById('report-province-filter').addEventListener('change', updateReportsTable);
+        document.getElementById('report-hub-filter').addEventListener('change', updateReportsTable);
+        document.getElementById('report-district-filter').addEventListener('change', updateReportsTable);
+        document.getElementById('report-facility-filter').addEventListener('change', updateReportsTable);
+
+        // Analytics Filters
+        document.getElementById('analytics-province-filter').addEventListener('change', updateAnalyticsTables);
+        document.getElementById('analytics-hub-filter').addEventListener('change', updateAnalyticsTables);
+        document.getElementById('analytics-district-filter').addEventListener('change', updateAnalyticsTables);
+        document.getElementById('analytics-facility-filter').addEventListener('change', updateAnalyticsTables);
+
+        // Add Commodity
+        document.getElementById('add-commodity-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const type = document.getElementById('commodity-type').value;
+            const name = document.getElementById('commodity-name').value.trim();
+            if (!name) {
+                alert('Commodity name cannot be empty');
+                return;
+            }
+            if (db.commodities[type].includes(name)) {
+                alert('Commodity already exists');
+                return;
+            }
+            db.commodities[type].push(name);
+            populateCommodityLists();
+            updateCommoditiesManagementTable();
+            showSection('admin-dashboard-section');
+            alert(`Commodity ${name} added successfully`);
+        });
+
+        // Create User (Admin)
+        document.getElementById('create-user-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const user = {
+                fullName: document.getElementById('user-full-name').value,
+                username: document.getElementById('user-username').value,
+                email: document.getElementById('user-email').value,
+                hub: document.getElementById('user-hub').value,
+                facility: document.getElementById('user-facility').value,
+                password: document.getElementById('user-password').value,
+                role: document.getElementById('user-role').value,
+                status: 'active',
+            };
+            if (!db.facilities.find(f => f.hub === user.hub && f.name === user.facility)) {
+                alert('Invalid hub or facility selected');
+                return;
+            }
+            db.users.push(user);
+            updateUsersTable();
+            updateDashboard();
+            showSection('user-management-section');
+            alert(`User ${user.username} created successfully`);
+        });
+
+        // Update Users Table
+        function updateUsersTable() {
+            const tbody = document.getElementById('users-table').querySelector('tbody');
+            tbody.innerHTML = '';
+            db.users.forEach(user => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${user.fullName || user.username}</td>
+                        <td>${user.email}</td>
+                        <td>${user.hub}</td>
+                        <td>${user.facility}</td>
+                        <td>${user.role}</td>
+                        <td>${user.status}</td>
+                        <td>
+                            <button onclick="deleteUser('${user.username}')" class="bg-red-500 text-white p-1 rounded">Delete</button>
+                        </td>
+                    </tr>`;
+            });
+        }
+
+        // Delete User
+        function deleteUser(username) {
+            db.users = db.users.filter(u => u.username !== username);
+            updateUsersTable();
+            updateDashboard();
+            alert(`User ${username} deleted`);
+        }
+
+        // Add Facility
+        document.getElementById('add-facility-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const facility = {
+                province: document.getElementById('facility-province').value.trim(),
+                hub: document.getElementById('facility-hub').value.trim(),
+                district: document.getElementById('facility-district').value.trim(),
+                name: document.getElementById('facility-name').value.trim(),
+            };
+            if (!facility.province || !facility.hub || !facility.district || !facility.name) {
+                alert('All facility fields are required');
+                return;
+            }
+            if (db.facilities.find(f => f.name === facility.name)) {
+                alert('Facility name already exists');
+                return;
+            }
+            db.facilities.push(facility);
+            updateFacilitiesTable();
+            updateSignupDropdowns();
+            updateDashboard();
+            showSection('facility-management-section');
+            alert(`Facility ${facility.name} added successfully`);
+        });
+
+        // Update Facilities Table
+        function updateFacilitiesTable() {
+            const tbody = document.getElementById('facilities-table').querySelector('tbody');
+            tbody.innerHTML = '';
+            db.facilities.forEach(facility => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${facility.province}</td>
+                        <td>${facility.hub}</td>
+                        <td>${facility.district}</td>
+                        <td>${facility.name}</td>
+                        <td>
+                            <button onclick="deleteFacility('${facility.name}')" class="bg-red-500 text-white p-1 rounded">Delete</button>
+                        </td>
+                    </tr>`;
+            });
+        }
+
+        // Delete Facility
+        function deleteFacility(name) {
+            db.facilities = db.facilities.filter(f => f.name !== name);
+            updateFacilitiesTable();
+            updateSignupDropdowns();
+            updateDashboard();
+            alert(`Facility ${name} deleted`);
+        }
+
+        // Initialize
+        checkSession();
+        populateCommodityLists();
+        updateAccountRequestsTable();
+        updateUsersTable();
+        updateFacilitiesTable();
+        updateCommoditiesManagementTable();
+    </script>
+</body>
+</html>
