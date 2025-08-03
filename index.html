@@ -3,864 +3,380 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ARV Stock Control System - Luapula Province</title>
-    
+    <title>🏥 ARV Stock Control System</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 20px;
-        }
-        
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-            background: white;
-            border-radius: 15px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
-            overflow: hidden;
-        }
-        
-        .header {
-            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
-            color: white;
-            padding: 30px;
-            text-align: center;
-        }
-        
-        .header h1 {
-            font-size: 2.5em;
-            margin-bottom: 10px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-        }
-        
-        .header p {
-            font-size: 1.1em;
-            opacity: 0.9;
-        }
-        
-        .nav-tabs {
-            display: flex;
-            background: #f8f9fa;
-            border-bottom: 3px solid #e9ecef;
-        }
-        
-        .nav-tab {
-            flex: 1;
-            background: none;
-            border: none;
-            padding: 20px;
-            font-size: 1.1em;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            border-bottom: 3px solid transparent;
-        }
-        
-        .nav-tab.active {
-            background: white;
-            color: #2c3e50;
-            border-bottom-color: #3498db;
-            transform: translateY(-2px);
-        }
-        
-        .nav-tab:hover:not(.active) {
-            background: #e9ecef;
-            transform: translateY(-1px);
-        }
-        
-        .tab-content {
-            display: none;
-            padding: 40px;
-        }
-        
-        .tab-content.active {
-            display: block;
-        }
-        
-        .form-section {
-            background: #f8f9fa;
-            border-radius: 10px;
-            padding: 25px;
-            margin-bottom: 25px;
-            border-left: 4px solid #3498db;
-        }
-        
-        .section-title {
-            font-size: 1.4em;
-            font-weight: 700;
-            color: #2c3e50;
-            margin-bottom: 20px;
-            padding-bottom: 10px;
-            border-bottom: 2px solid #e9ecef;
-        }
-        
-        .form-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 20px;
-            margin-bottom: 20px;
-        }
-        
-        .form-grid-3 {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 15px;
-            margin-bottom: 20px;
-        }
-        
-        .form-group {
-            position: relative;
-        }
-        
-        .form-group label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 600;
-            color: #2c3e50;
-            font-size: 0.95em;
-        }
-        
-        .form-group input, .form-group select, .form-group textarea {
-            width: 100%;
-            padding: 12px;
-            border: 2px solid #e9ecef;
-            border-radius: 8px;
-            font-size: 0.95em;
-            transition: all 0.3s ease;
-            background: white;
-        }
-        
-        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
-            outline: none;
-            border-color: #3498db;
-            box-shadow: 0 0 15px rgba(52, 152, 219, 0.1);
-            transform: translateY(-1px);
-        }
-        
-        .commodity-grid {
-            display: grid;
-            grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr;
-            gap: 15px;
-            margin-bottom: 15px;
-            align-items: end;
-        }
-        
-        .commodity-header {
-            display: grid;
-            grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr;
-            gap: 15px;
-            margin-bottom: 10px;
-            font-weight: 700;
-            color: #2c3e50;
-            font-size: 0.9em;
-        }
-        
-        .btn {
-            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
-            color: white;
-            border: none;
-            padding: 15px 30px;
-            border-radius: 10px;
-            font-size: 1.1em;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 5px 15px rgba(52, 152, 219, 0.3);
-        }
-        
-        .btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 25px rgba(52, 152, 219, 0.4);
-        }
-        
-        .btn:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-            transform: none;
-        }
-        
-        .btn-success {
-            background: linear-gradient(135deg, #27ae60 0%, #229954 100%);
-            box-shadow: 0 5px 15px rgba(39, 174, 96, 0.3);
-        }
-        
-        .btn-danger {
-            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
-            box-shadow: 0 5px 15px rgba(231, 76, 60, 0.3);
-        }
-        
-        .btn-warning {
-            background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
-            box-shadow: 0 5px 15px rgba(243, 156, 18, 0.3);
-        }
-        
-        .table-container {
-            overflow-x: auto;
-            border-radius: 10px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-            margin-top: 20px;
-        }
-        
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            background: white;
-            font-size: 0.9em;
-        }
-        
-        th {
-            background: linear-gradient(135deg, #34495e 0%, #2c3e50 100%);
-            color: white;
-            padding: 12px 8px;
-            text-align: left;
-            font-weight: 600;
-            position: sticky;
-            top: 0;
-            font-size: 0.85em;
-        }
-        
-        td {
-            padding: 10px 8px;
-            border-bottom: 1px solid #e9ecef;
-            transition: background 0.2s ease;
-        }
-        
-        tr:hover {
-            background: #f8f9fa;
-        }
-        
-        .status-badge {
-            padding: 4px 8px;
-            border-radius: 15px;
-            font-size: 0.75em;
-            font-weight: 600;
-            text-transform: uppercase;
-        }
-        
-        .status-active {
-            background: #e8f5e8;
-            color: #2e7d32;
-        }
-        
-        .status-inactive {
-            background: #ffebee;
-            color: #c62828;
-        }
-        
-        .alert {
-            padding: 15px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-            font-weight: 500;
-        }
-        
-        .alert-success {
-            background: #d4edda;
-            color: #155724;
-            border: 2px solid #c3e6cb;
-        }
-        
-        .alert-warning {
-            background: #fff3cd;
-            color: #856404;
-            border: 2px solid #ffeaa7;
-        }
-        
-        .alert-error {
-            background: #f8d7da;
-            color: #721c24;
-            border: 2px solid #f5c6cb;
-        }
-        
-        .login-container {
-            max-width: 500px;
-            margin: 50px auto;
-            background: white;
-            padding: 40px;
-            border-radius: 15px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
-        }
-        
-        .login-header {
-            text-align: center;
-            margin-bottom: 30px;
-        }
-        
-        .login-header h2 {
-            color: #2c3e50;
-            margin-bottom: 10px;
-        }
-        
-        .loading {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 3px solid #f3f3f3;
-            border-top: 3px solid #3498db;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin-right: 10px;
-        }
-        
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        
-        .hidden {
-            display: none !important;
-        }
-        
-        .program-metrics {
-            background: #fff8e1;
-            border-left: 4px solid #ffc107;
-        }
-        
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 1000;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0,0,0,0.5);
-        }
-        
-        .modal-content {
-            background-color: white;
-            margin: 5% auto;
-            padding: 30px;
-            border-radius: 15px;
-            width: 90%;
-            max-width: 600px;
-            max-height: 80vh;
-            overflow-y: auto;
-        }
-        
-        .close {
-            color: #aaa;
-            float: right;
-            font-size: 28px;
-            font-weight: bold;
-            cursor: pointer;
-            line-height: 1;
-        }
-        
-        .close:hover {
-            color: #000;
-        }
-
-        .week-display {
-            font-size: 0.9em;
-            color: #666;
-            margin-top: 5px;
-        }
-        
-        @media (max-width: 768px) {
-            .commodity-grid, .commodity-header {
-                grid-template-columns: 1fr;
-                gap: 10px;
-            }
-            
-            .form-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .nav-tabs {
-                flex-direction: column;
-            }
-            
-            .container {
-                margin: 10px;
-            }
-            
-            body {
-                padding: 10px;
-            }
-        }
+        /* Basic styling for better usability */
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        section { margin-bottom: 20px; }
+        label { display: block; margin: 10px 0 5px; }
+        input, select, textarea { width: 100%; max-width: 300px; padding: 8px; margin-bottom: 10px; }
+        button { padding: 10px 20px; cursor: pointer; }
+        table { border-collapse: collapse; width: 100%; max-width: 800px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        .error { color: red; display: none; margin-bottom: 10px; }
+        .modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 20px; border: 1px solid #ccc; }
     </style>
 </head>
 <body>
-    <!-- Login Screen -->
-    <div id="loginScreen" class="login-container">
-        <div class="login-header">
-            <h2>🏥 ARV Stock Control System</h2>
-            <p>Luapula Province, Zambia</p>
-        </div>
-        
-        <div id="loginAlert"></div>
-        
-        <div class="form-group">
-            <label for="username">username:</label>
-            <input type="username" id="username" placeholder="your.username">
-        </div>
-        <div class="form-group">
-            <label for="loginPassword">Password:</label>
-            <input type="password" id="loginPassword" placeholder="Password">
-        </div>
-        <button class="btn" onclick="login()" id="loginBtn" style="width: 100%;">
-            <span class="loading hidden"></span>Login
-        </button>
-    </div>
-
-    <!-- Main Application -->
-    <div id="mainApp" class="container hidden">
-        <div class="header">
-            <h1>🏥 ARV Stock Control System</h1>
-            <p>Weekly ARV Reporting & HIV Program Monitoring - Luapula Province</p>
-            <div style="margin-top: 20px;">
-                <span id="currentUser" style="background: rgba(255,255,255,0.2); padding: 10px 20px; border-radius: 20px;"></span>
-                <button class="btn" onclick="logout()" style="margin-left: 15px; padding: 8px 16px; font-size: 0.9em;">Logout</button>
-            </div>
-        </div>
-
-        <div class="nav-tabs">
-            <button class="nav-tab active" onclick="showTab('submit', this)">📝 Submit ARV Report</button>
-            <button class="nav-tab" onclick="showTab('view', this)" id="viewTab">📊 View Reports</button>
-            <button class="nav-tab hidden" onclick="showTab('users', this)" id="usersTab">👥 User Management</button>
-            <button class="nav-tab hidden" onclick="showTab('admin', this)" id="adminTab">⚙️ Admin Dashboard</button>
-        </div>
-
-        <!-- Submit Report Tab -->
-        <div id="submit" class="tab-content active">
-            <h2 style="margin-bottom: 30px; color: #2c3e50;">📝 Weekly ARV Stock & Program Report</h2>
+    <!-- Login Section -->
+    <section id="login-section">
+        <h1>🏥 ARV Stock Control System</h1>
+        <h2>Luapula Province, Zambia</h2>
+        <form id="loginForm" action="/login" method="POST">
+            <label for="username">Username:</label>
+            <input type="text" id="username" name="username" required placeholder="Enter your username">
             
-            <form id="arvForm">
-                <!-- Basic Information -->
-                <div class="form-section">
-                    <div class="section-title">📅 Report Information</div>
-                    <div class="form-grid">
-                        <div class="form-group">
-                            <label for="reportWeek">Report Week:</label>
-                            <input type="week" id="reportWeek" required onchange="updateWeekDisplay()">
-                            <div id="weekDisplay" class="week-display"></div>
-                        </div>
-                        <div class="form-group">
-                            <label for="facilityName">Facility Name:</label>
-                            <input type="text" id="facilityName" readonly>
-                        </div>
-                        <div class="form-group">
-                            <label for="reporterName">Reporter Name:</label>
-                            <input type="text" id="reporterName" placeholder="Your full name" required>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- ARV Commodities -->
-                <div class="form-section">
-                    <div class="section-title">💊 ARV Commodities Stock Report</div>
-                    <div class="commodity-header">
-                        <div>Commodity</div>
-                        <div>Opening Balance</div>
-                        <div>Received</div>
-                        <div>Used</div>
-                        <div>Given Out</div>
-                        <div>Current Balance</div>
-                    </div>
-                    <div id="arvCommodities"></div>
-                </div>
-
-                <!-- HIV Testing Commodities -->
-                <div class="form-section">
-                    <div class="section-title">🧪 HIV Testing Commodities</div>
-                    <div class="commodity-header">
-                        <div>Commodity</div>
-                        <div>Opening Balance</div>
-                        <div>Received</div>
-                        <div>Used</div>
-                        <div>Given Out</div>
-                        <div>Current Balance</div>
-                    </div>
-                    <div id="testingCommodities"></div>
-                </div>
-
-                <!-- Program Metrics -->
-                <div class="form-section program-metrics">
-                    <div class="section-title">📊 HIV Program Metrics</div>
-                    
-                    <div style="margin-bottom: 25px;">
-                        <h4 style="color: #2c3e50; margin-bottom: 15px;">Clients Seen</h4>
-                        <div class="form-grid-3">
-                            <div class="form-group">
-                                <label for="clientsSeen">Total Clients Seen:</label>
-                                <input type="number" id="clientsSeen" min="0" placeholder="0">
-                            </div>
-                        </div>
-                    </div>
-
-                    <div style="margin-bottom: 25px;">
-                        <h4 style="color: #2c3e50; margin-bottom: 15px;">Drug Delivery Schedule</h4>
-                        <div class="form-grid-3">
-                            <div class="form-group">
-                                <label for="dueForDelivery">Due for Drug Delivery:</label>
-                                <input type="number" id="dueForDelivery" min="0" placeholder="0">
-                            </div>
-                            <div class="form-group">
-                                <label for="sixMMD">6MMD (6-month multi-month dispensing):</label>
-                                <input type="number" id="sixMMD" min="0" placeholder="0">
-                            </div>
-                            <div class="form-group">
-                                <label for="threeToFiveMMD">3-5MMD:</label>
-                                <input type="number" id="threeToFiveMMD" min="0" placeholder="0">
-                            </div>
-                            <div class="form-group">
-                                <label for="lessThanThreeMMD">Less than 3MMD:</label>
-                                <input type="number" id="lessThanThreeMMD" min="0" placeholder="0">
-                            </div>
-                        </div>
-                    </div>
-
-                    <div style="margin-bottom: 25px;">
-                        <h4 style="color: #2c3e50; margin-bottom: 15px;">Viral Load Monitoring</h4>
-                        <div class="form-grid-3">
-                            <div class="form-group">
-                                <label for="clientsDueVL">Clients Due for VL:</label>
-                                <input type="number" id="clientsDueVL" min="0" placeholder="0">
-                            </div>
-                            <div class="form-group">
-                                <label for="vlCollected">VL Collected (from those due):</label>
-                                <input type="number" id="vlCollected" min="0" placeholder="0">
-                            </div>
-                        </div>
-                    </div>
-
-                    <div style="margin-bottom: 25px;">
-                        <h4 style="color: #2c3e50; margin-bottom: 15px;">TPT & Community Activities</h4>
-                        <div class="form-grid-3">
-                            <div class="form-group">
-                                <label for="tptInitiations">TPT Initiations:</label>
-                                <input type="number" id="tptInitiations" min="0" placeholder="0">
-                            </div>
-                            <div class="form-group">
-                                <label for="homeDeliveries">Home Deliveries:</label>
-                                <input type="number" id="homeDeliveries" min="0" placeholder="0">
-                            </div>
-                            <div class="form-group">
-                                <label for="communityActivities">Community Activities:</label>
-                                <input type="number" id="communityActivities" min="0" placeholder="0">
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Additional Notes -->
-                <div class="form-section">
-                    <div class="section-title">📝 Additional Information</div>
-                    <div class="form-group">
-                        <label for="remarks">Remarks/Notes:</label>
-                        <textarea id="remarks" rows="4" placeholder="Any additional notes, challenges, or observations..."></textarea>
-                    </div>
-                </div>
-                
-                <button type="submit" class="btn btn-success" id="submitBtn" style="width: 100%; padding: 20px; font-size: 1.2em;">
-                    <span class="loading hidden"></span>💾 Submit Complete ARV Report
-                </button>
-            </form>
-        </div>
-
-        <!-- View Reports Tab -->
-        <div id="view" class="tab-content">
-            <h2 style="margin-bottom: 30px; color: #2c3e50;">📊 ARV Stock Reports</h2>
+            <label for="password">Password:</label>
+            <input type="password" id="password" name="password" required placeholder="Enter your password">
             
-            <div class="table-container">
-                <table id="reportsTable">
-                    <thead>
-                        <tr>
-                            <th>Week</th>
-                            <th>Hub</th>
-                            <th>Facility</th>
-                            <th>Reporter</th>
-                            <th>Clients Seen</th>
-                            <th>Due for Delivery</th>
-                            <th>6MMD</th>
-                            <th>3-5MMD</th>
-                            <th><3MMD</th>
-                            <th>VL Due</th>
-                            <th>VL Collected</th>
-                            <th>TPT Initiations</th>
-                            <th>Submitted</th>
-                        </tr>
-                    </thead>
-                    <tbody id="reportsTableBody">
-                        <tr><td colspan="13" style="text-align: center; color: #666;">No reports submitted yet</td></tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        <!-- User Management Tab -->
-        <div id="users" class="tab-content">
-            <h2 style="margin-bottom: 30px; color: #2c3e50;">👥 User Management</h2>
+            <!-- CSRF token (replace 'csrf_token_value' with actual token from backend) -->
+            <input type="hidden" name="_csrf" value="csrf_token_value">
             
-            <div style="margin-bottom: 30px;">
-                <button class="btn btn-success" onclick="showCreateUserModal()">➕ Create New User</button>
-            </div>
-
-            <div class="table-container">
-                <table id="usersTable">
-                    <thead>
-                        <tr>
-                            <th>Name</th>
-                            <th>Email</th>
-                            <th>Hub</th>
-                            <th>Facility</th>
-                            <th>Role</th>
-                            <th>Status</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="usersTableBody">
-                        <!-- Users will be populated here -->
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        <!-- Admin Dashboard Tab -->
-        <div id="admin" class="tab-content">
-            <h2 style="margin-bottom: 30px; color: #2c3e50;">⚙️ Provincial Administrator Dashboard</h2>
+            <div id="login-error" class="error"></div>
             
-            <div class="table-container">
-                <table id="adminReportsTable">
-                    <thead>
-                        <tr>
-                            <th>Week</th>
-                            <th>Hub</th>
-                            <th>Facility</th>
-                            <th>Reporter</th>
-                            <th>Clients Seen</th>
-                            <th>Due Delivery</th>
-                            <th>6MMD</th>
-                            <th>3-5MMD</th>
-                            <th><3MMD</th>
-                            <th>VL Due</th>
-                            <th>VL Collected</th>
-                            <th>TPT</th>
-                            <th>Home Del.</th>
-                            <th>Community</th>
-                            <th>Submitted</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="adminReportsTableBody">
-                        <tr><td colspan="16" style="text-align: center; color: #666;">No reports available</td></tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
+            <button type="submit">Login</button>
+        </form>
+    </section>
+
+    <!-- Dashboard Section -->
+    <section id="dashboard-section" style="display: none;">
+        <h1>🏥 ARV Stock Control System</h1>
+        <h2>Weekly ARV Reporting & HIV Program Monitoring - Luapula Province</h2>
+        <form action="/logout" method="POST">
+            <input type="hidden" name="_csrf" value="csrf_token_value">
+            <button type="submit">Logout</button>
+        </form>
+        <nav>
+            <button onclick="showSection('report-section')">📝 Submit ARV Report</button>
+            <button onclick="showSection('reports-section')">📊 View Reports</button>
+            <button onclick="showSection('user-management-section')">👥 User Management</button>
+            <button onclick="showSection('admin-section')">⚙️ Admin Dashboard</button>
+        </nav>
+    </section>
+
+    <!-- Report Submission Section -->
+    <section id="report-section" style="display: none;">
+        <h2>📝 Weekly ARV Stock & Program Report</h2>
+        <form id="reportForm" action="/submit-report" method="POST">
+            <input type="hidden" name="_csrf" value="csrf_token_value">
+            
+            <h3>📅 Report Information</h3>
+            <label for="report-week">Report Week:</label>
+            <input type="week" id="report-week" name="report_week" required>
+            
+            <label for="facility-name">Facility Name:</label>
+            <input type="text" id="facility-name" name="facility_name" required>
+            
+            <label for="reporter-name">Reporter Name:</label>
+            <input type="text" id="reporter-name" name="reporter_name" required>
+            
+            <h3>💊 ARV Commodities Stock Report</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Commodity</th>
+                        <th>Opening Balance</th>
+                        <th>Received</th>
+                        <th>Used</th>
+                        <th>Given Out</th>
+                        <th>Current Balance</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Example row; dynamically populate via backend or JavaScript -->
+                    <tr>
+                        <td><input type="text" name="commodities[0][name]" required></td>
+                        <td><input type="number" name="commodities[0][opening_balance]" required min="0"></td>
+                        <td><input type="number" name="commodities[0][received]" required min="0"></td>
+                        <td><input type="number" name="commodities[0][used]" required min="0"></td>
+                        <td><input type="number" name="commodities[0][given_out]" required min="0"></td>
+                        <td><input type="number" name="commodities[0][current_balance]" required min="0"></td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <h3>🧪 HIV Testing Commodities</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Commodity</th>
+                        <th>Opening Balance</th>
+                        <th>Received</th>
+                        <th>Used</th>
+                        <th>Given Out</th>
+                        <th>Current Balance</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><input type="text" name="test_commodities[0][name]" required></td>
+                        <td><input type="number" name="test_commodities[0][opening_balance]" required min="0"></td>
+                        <td><input type="number" name="test_commodities[0][received]" required min="0"></td>
+                        <td><input type="number" name="test_commodities[0][used]" required min="0"></td>
+                        <td><input type="number" name="test_commodities[0][given_out]" required min="0"></td>
+                        <td><input type="number" name="test_commodities[0][current_balance]" required min="0"></td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <h3>📊 HIV Program Metrics</h3>
+            <label for="clients-seen">Total Clients Seen:</label>
+            <input type="number" id="clients-seen" name="clients_seen" required min="0">
+            
+            <h4>Drug Delivery Schedule</h4>
+            <label for="due-delivery">Due for Drug Delivery:</label>
+            <input type="number" id="due-delivery" name="due_delivery" required min="0">
+            
+            <label for="mmd-6">6MMD (6-month multi-month dispensing):</label>
+            <input type="number" id="mmd-6" name="mmd_6" required min="0">
+            
+            <label for="mmd-3-5">3-5MMD:</label>
+            <input type="number" id="mmd-3-5" name="mmd_3_5" required min="0">
+            
+            <label for="mmd-less-3">Less than 3MMD:</label>
+            <input type="number" id="mmd-less-3" name="mmd_less_3" required min="0">
+            
+            <h4>Viral Load Monitoring</h4>
+            <label for="vl-due">Clients Due for VL:</label>
+            <input type="number" id="vl-due" name="vl_due" required min="0">
+            
+            <label for="vl-collected">VL Collected (from those due):</label>
+            <input type="number" id="vl-collected" name="vl_collected" required min="0">
+            
+            <h4>TPT & Community Activities</h4>
+            <label for="tpt-initiations">TPT Initiations:</label>
+            <input type="number" id="tpt-initiations" name="tpt_initiations" required min="0">
+            
+            <label for="home-deliveries">Home Deliveries:</label>
+            <input type="number" id="home-deliveries" name="home_deliveries" required min="0">
+            
+            <label for="community-activities">Community Activities:</label>
+            <input type="number" id="community-activities" name="community_activities" required min="0">
+            
+            <h3>📝 Additional Information</h3>
+            <label for="remarks">Remarks/Notes:</label>
+            <textarea id="remarks" name="remarks" rows="4"></textarea>
+            
+            <div id="report-error" class="error"></div>
+            
+            <button type="submit">💾 Submit Complete ARV Report</button>
+        </form>
+    </section>
+
+    <!-- View Reports Section -->
+    <section id="reports-section" style="display: none;">
+        <h2>📊 ARV Stock Reports</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Week</th>
+                    <th>Hub</th>
+                    <th>Facility</th>
+                    <th>Reporter</th>
+                    <th>Clients Seen</th>
+                    <th>Due for Delivery</th>
+                    <th>6MMD</th>
+                    <th>3-5MMD</th>
+                    <th>VL Due</th>
+                    <th>VL Collected</th>
+                    <th>TPT Initiations</th>
+                    <th>Submitted</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td colspan="12">No reports submitted yet</td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
+
+    <!-- User Management Section -->
+    <section id="user-management-section" style="display: none;">
+        <h2>👥 User Management</h2>
+        <button onclick="showSection('create-user-modal')">➕ Create New User</button>
+        <table>
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Hub</th>
+                    <th>Facility</th>
+                    <th>Role</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Populated dynamically by backend -->
+            </tbody>
+        </table>
+    </section>
+
+    <!-- Admin Dashboard Section -->
+    <section id="admin-section" style="display: none;">
+        <h2>⚙️ Provincial Administrator Dashboard</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Week</th>
+                    <th>Hub</th>
+                    <th>Facility</th>
+                    <th>Reporter</th>
+                    <th>Clients Seen</th>
+                    <th>Due Delivery</th>
+                    <th>6MMD</th>
+                    <th>3-5MMD</th>
+                    <th>VL Due</th>
+                    <th>VL Collected</th>
+                    <th>TPT</th>
+                    <th>Home Del.</th>
+                    <th>Community</th>
+                    <th>Submitted</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td colspan="15">No reports available</td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
 
     <!-- Create User Modal -->
-    <div id="createUserModal" class="modal">
-        <div class="modal-content">
-            <span class="close" onclick="closeCreateUserModal()">&times;</span>
-            <h2 style="margin-bottom: 20px; color: #2c3e50;">Create New User Account</h2>
+    <section id="create-user-modal" class="modal">
+        <h2>× Create New User Account</h2>
+        <form id="createUserForm" action="/create-user" method="POST">
+            <input type="hidden" name="_csrf" value="csrf_token_value">
             
-            <form id="createUserForm">
-                <div class="form-grid">
-                    <div class="form-group">
-                        <label for="newUserName">Full Name:</label>
-                        <input type="text" id="newUserName" required placeholder="John Doe">
-                    </div>
-                    <div class="form-group">
-                        <label for="newUsername">Username:</label>
-                        <input type="username" id="newUsername" required placeholder="John">
-                    </div>
-                    <div class="form-group">
-                        <label for="newUserHub">Hub:</label>
-                        <select id="newUserHub" required onchange="updateNewUserFacilities()">
-                            <option value="">Select Hub</option>
-                            <option value="Mansa Hub">Mansa Hub</option>
-                            <option value="Kawambwa Hub">Kawambwa Hub</option>
-                            <option value="Samfya Hub">Samfya Hub</option>
-                            <option value="Nchelenge Hub">Nchelenge Hub</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="newUserFacility">Facility:</label>
-                        <select id="newUserFacility" required>
-                            <option value="">First select hub</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="newUserPassword">Password:</label>
-                        <input type="password" id="newUserPassword" required placeholder="Minimum 6 characters">
-                    </div>
-                    <div class="form-group">
-                        <label for="newUserRole">Role:</label>
-                        <select id="newUserRole" required>
-                            <option value="facility">Facility User</option>
-                            <option value="admin">Administrator</option>
-                        </select>
-                    </div>
-                </div>
-                
-                <button type="submit" class="btn btn-success" style="width: 100%;">
-                    <span class="loading hidden"></span>Create User Account
-                </button>
-            </form>
-        </div>
-    </div>
+            <label for="full-name">Full Name:</label>
+            <input type="text" id="full-name" name="full_name" required>
+            
+            <label for="new-username">Username:</label>
+            <input type="text" id="new-username" name="username" required>
+            
+            <label for="hub">Hub:</label>
+            <select id="hub" name="hub" required onchange="updateFacilities()">
+                <option value="">Select Hub</option>
+                <option value="Mansa">Mansa Hub</option>
+                <option value="Kawambwa">Kawambwa Hub</option>
+                <option value="Samfya">Samfya Hub</option>
+                <option value="Nchelenge">Nchelenge Hub</option>
+            </select>
+            
+            <label for="facility">Facility:</label>
+            <select id="facility" name="facility" required>
+                <option value="">First select hub</option>
+                <!-- Populated dynamically via JavaScript or backend -->
+            </select>
+            
+            <label for="new-password">Password:</label>
+            <input type="password" id="new-password" name="password" required>
+            
+            <label for="role">Role:</label>
+            <select id="role" name="role" required>
+                <option value="facility_user">Facility User</option>
+                <option value="administrator">Administrator</option>
+            </select>
+            
+            <div id="create-user-error" class="error"></div>
+            
+            <button type="submit">Create User Account</button>
+            <button type="button" onclick="hideModal()">Cancel</button>
+        </form>
+    </section>
 
     <script>
-        // Global variables
-        let currentUser = null;
-        let currentUserType = '';
-        let currentFacility = '';
-        let currentHub = '';
-
-        // Default users
-        const defaultUsers = {
-            'adminkeegan': {
-                password: 'Job1@honkeegan',
-                name: 'System Administrator',
-                role: 'admin',
-                hub: 'Provincial Office',
-                facility: 'Provincial Office',
-                status: 'active'
-            },
-            'Keegan': {
-                password: 'Job1@hon',
-                name: 'Mansa Hospital User',
-                role: 'facility',
-                hub: 'Mansa Hub',
-                facility: 'Mansa General Hospital',
-                status: 'active'
-            }
-        };
-
-        // ARV Commodities list
-        const arvCommodities = [
-            'TLD btl of 30s',
-            'TLD btl of 90s', 
-            'TLD btl of 180s',
-            'PALD',
-            'TAFED (KOCITAF)',
-            'ABC/3TC Pdtg10mg',
-            'DTG50mg Pdtg10mg',
-            'INH 300mg',
-            'NVP',
-            'BENZATHINE',
-            'LIGNOCAIN',
-            'AZT/3TC pediatric'
-        ];
-
-        // Testing commodities
-        const testingCommodities = [
-            'ORAL QUICK',
-            'DETERMINE',
-            'SD BIOLINE',
-            'HIV/SYPHILIS DUO',
-            'TDF/FTC (PrEP)',
-            'DBS CARDS',
-            'EDTA BOTTLES'
-        ];
-
-        // Hub-Facility mapping
-        const hubFacilities = {
-            'Mansa Hub': [
-                'Mansa General Hospital',
-                'Mansa District Hospital',
-                'Mansa Urban Clinic',
-                'Chembe Rural Health Center',
-                'Milenge Rural Health Center'
-            ],
-            'Kawambwa Hub': [
-                'Kawambwa District Hospital',
-                'Mwense Rural Health Center',
-                'Kawambwa Urban Clinic',
-                'Lunga Rural Health Center'
-            ],
-            'Samfya Hub': [
-                'Samfya District Hospital',
-                'Samfya Urban Clinic',
-                'Chilubi Rural Health Center',
-                'Chiengi Rural Health Center'
-            ],
-            'Nchelenge Hub': [
-                'Nchelenge District Hospital',
-                'Nchelenge Urban Clinic',
-                'Kashikishi Rural Health Center',
-                'Pweto Rural Health Center'
-            ]
-        };
-
-        // Initialize the application
-        function init() {
-            initializeUsers();
-            setCurrentWeek();
-            createCommodityInputs();
-            loadUsers();
+        // Section navigation
+        function showSection(sectionId) {
+            document.querySelectorAll('section').forEach(section => {
+                section.style.display = 'none';
+            });
+            document.getElementById(sectionId).style.display = 'block';
         }
 
-        // Initialize default users if not exists
-        function initializeUsers() {
-    localStorage.setItem('arvUsers', JSON.stringify(defaultUsers));
-}
-
-        // Show alert messages
-        function showAlert(message, type) {
-            const alertDiv = document.getElementById('loginAlert');
-            alertDiv.innerHTML = `<div class="alert alert-${type}">${message}</div>`;
-            setTimeout(() => {
-                alertDiv.innerHTML = '';
-            }, 5000);
+        function hideModal() {
+            document.getElementById('create-user-modal').style.display = 'none';
         }
 
-        // Authentication
-        <script>
-function login() {
-    const email = document.getElementById('loginusername').value.trim();
-    const password = document.getElementById('loginPassword').value;
-    const loginBtn = document.getElementById('loginBtn');
-    const loading = loginBtn.querySelector('.loading');
+        // Example facility population based on hub (adjust based on actual data)
+        function updateFacilities() {
+            const hub = document.getElementById('hub').value;
+            const facilitySelect = document.getElementById('facility');
+            facilitySelect.innerHTML = '<option value="">Select Facility</option>';
+            // Add logic to populate facilities based on hub (e.g., via backend API)
+        }
 
-    if (!email || !password) {
-        showAlert('Please enter both username and password', 'error');
-        return;
-    }
-
-    const users = JSON.parse(localStorage.getItem('arvUsers')) || {};
-
-    if (!users[username]) {
-        showAlert('User not found. Contact admin.', 'error');
-        return;
-    }
-
-    if (users[username].password !== password) {
-        showAlert('Incorrect password.', 'error');
-        return;
-    }
-
-    // Set session data
-    currentUser = users[username].name;
-    currentUserType = users[username].role;
-    currentFacility = users[username].facility;
-    currentHub = users[username].hub;
-
-    // Update UI
-    document.getElementById('loginScreen').classList.add('hidden');
-    document.getElementById('mainApp').classList.remove('hidden');
-    document.getElementById('currentUser').textContent = `Logged in as: ${currentUser}`;
-
-    if (currentUserType === 'admin') {
-        document.getElementById('usersTab').classList.remove('hidden');
-        document.getElementById('adminTab').classList.remove('hidden');
-    } else {
-        document.getElementById('usersTab').classList.add('hidden');
-        document.getElementById('adminTab').classList.add('hidden');
-    }
-
-    showTab('submit', document.querySelector('.nav-tab'));
-}
-</script>
+        // Login form submission
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const errorDiv = document.getElementById('login-error');
             
+            try {
+                const response = await fetch('/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+                if (response.ok) {
+                    showSection('dashboard-section');
+                } else {
+                    errorDiv.textContent = 'Invalid username or password';
+                    errorDiv.style.display = 'block';
+                }
+            } catch (error) {
+                errorDiv.textContent = 'Error connecting to server';
+                errorDiv.style.display = 'block';
+            }
+        });
+
+        // Report form submission (basic validation)
+        document.getElementById('reportForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const errorDiv = document.getElementById('report-error');
+            try {
+                const response = await fetch('/submit-report', {
+                    method: 'POST',
+                    body: new FormData(document.getElementById('reportForm'))
+                });
+                if (response.ok) {
+                    alert('Report submitted successfully');
+                    showSection('reports-section');
+                } else {
+                    errorDiv.textContent = 'Failed to submit report';
+                    errorDiv.style.display = 'block';
+                }
+            } catch (error) {
+                errorDiv.textContent = 'Error connecting to server';
+                errorDiv.style.display = 'block';
+            }
+        });
+
+        // Create user form submission
+        document.getElementById('createUserForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const errorDiv = document.getElementById('create-user-error');
+            try {
+                const response = await fetch('/create-user', {
+                    method: 'POST',
+                    body: new FormData(document.getElementById('createUserForm'))
+                });
+                if (response.ok) {
+                    alert('User created successfully');
+                    hideModal();
+                    showSection('user-management-section');
+                } else {
+                    errorDiv.textContent = 'Failed to create user';
+                    errorDiv.style.display = 'block';
+                }
+            } catch (error) {
+                errorDiv.textContent = 'Error connecting to server';
+                errorDiv.style.display = 'block';
+            }
+        });
+    </script>
+</body>
+</html>
