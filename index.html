@@ -817,13 +817,50 @@
         }
 
         // Authentication
-        function login() {
-            const email = document.getElementById('loginusername').value.trim();
-            const password = document.getElementById('loginPassword').value;
-            const loginBtn = document.getElementById('loginBtn');
-            const loading = loginBtn.querySelector('.loading');
+        <script>
+function login() {
+    const email = document.getElementById('loginusername').value.trim();
+    const password = document.getElementById('loginPassword').value;
+    const loginBtn = document.getElementById('loginBtn');
+    const loading = loginBtn.querySelector('.loading');
 
-            if (!username || !password) {
-                showAlert('Please enter both username and password', 'error');
-                return;
+    if (!email || !password) {
+        showAlert('Please enter both username and password', 'error');
+        return;
+    }
+
+    const users = JSON.parse(localStorage.getItem('arvUsers')) || {};
+
+    if (!users[username]) {
+        showAlert('User not found. Contact admin.', 'error');
+        return;
+    }
+
+    if (users[username].password !== password) {
+        showAlert('Incorrect password.', 'error');
+        return;
+    }
+
+    // Set session data
+    currentUser = users[username].name;
+    currentUserType = users[username].role;
+    currentFacility = users[username].facility;
+    currentHub = users[username].hub;
+
+    // Update UI
+    document.getElementById('loginScreen').classList.add('hidden');
+    document.getElementById('mainApp').classList.remove('hidden');
+    document.getElementById('currentUser').textContent = `Logged in as: ${currentUser}`;
+
+    if (currentUserType === 'admin') {
+        document.getElementById('usersTab').classList.remove('hidden');
+        document.getElementById('adminTab').classList.remove('hidden');
+    } else {
+        document.getElementById('usersTab').classList.add('hidden');
+        document.getElementById('adminTab').classList.add('hidden');
+    }
+
+    showTab('submit', document.querySelector('.nav-tab'));
+}
+</script>
             
