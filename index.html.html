@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ARV Stock Control System - Luapula Province</title>
+    
+    <!-- Firebase SDKs -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.23.0/firebase-app-compat.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.23.0/firebase-auth-compat.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.23.0/firebase-firestore-compat.min.js"></script>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+        
+        .nav-tabs {
+            display: flex;
+            background: #f8f9fa;
+            border-bottom: 3px solid #e9ecef;
+        }
+        
+        .nav-tab {
+            flex: 1;
+            background: none;
+            border: none;
+            padding: 20px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-bottom: 3px solid transparent;
+        }
+        
+        .nav-tab.active {
+            background: white;
+            color: #2c3e50;
+            border-bottom-color: #3498db;
+            transform: translateY(-2px);
+        }
+        
+        .nav-tab:hover:not(.active) {
+            background: #e9ecef;
+            transform: translateY(-1px);
+        }
+        
+        .tab-content {
+            display: none;
+            padding: 40px;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .form-section {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 25px;
+            margin-bottom: 25px;
+            border-left: 4px solid #3498db;
+        }
+        
+        .section-title {
+            font-size: 1.4em;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e9ecef;
+        }
+        
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .form-grid-3 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .form-group {
+            position: relative;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #2c3e50;
+            font-size: 0.95em;
+        }
+        
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 0.95em;
+            transition: all 0.3s ease;
+            background: white;
+        }
+        
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 15px rgba(52, 152, 219, 0.1);
+            transform: translateY(-1px);
+        }
+        
+        .commodity-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 15px;
+            align-items: end;
+        }
+        
+        .commodity-header {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 10px;
+            font-weight: 700;
+            color: #2c3e50;
+            font-size: 0.9em;
+        }
+        
+        .commodity-row {
+            display: contents;
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(52, 152, 219, 0.3);
+        }
+        
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(52, 152, 219, 0.4);
+        }
+        
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, #27ae60 0%, #229954 100%);
+            box-shadow: 0 5px 15px rgba(39, 174, 96, 0.3);
+        }
+        
+        .btn-danger {
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+            box-shadow: 0 5px 15px rgba(231, 76, 60, 0.3);
+        }
+        
+        .btn-warning {
+            background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+            box-shadow: 0 5px 15px rgba(243, 156, 18, 0.3);
+        }
+        
+        .table-container {
+            overflow-x: auto;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            margin-top: 20px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            font-size: 0.9em;
+        }
+        
+        th {
+            background: linear-gradient(135deg, #34495e 0%, #2c3e50 100%);
+            color: white;
+            padding: 12px 8px;
+            text-align: left;
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+            font-size: 0.85em;
+        }
+        
+        td {
+            padding: 10px 8px;
+            border-bottom: 1px solid #e9ecef;
+            transition: background 0.2s ease;
+        }
+        
+        tr:hover {
+            background: #f8f9fa;
+        }
+        
+        .status-badge {
+            padding: 4px 8px;
+            border-radius: 15px;
+            font-size: 0.75em;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        
+        .status-active {
+            background: #e8f5e8;
+            color: #2e7d32;
+        }
+        
+        .status-inactive {
+            background: #ffebee;
+            color: #c62828;
+        }
+        
+        .filters {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        
+        .filters > div {
+            min-width: 200px;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-card {
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(52, 152, 219, 0.2);
+            transition: transform 0.3s ease;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .stat-card h3 {
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+        
+        .stat-card p {
+            font-size: 0.95em;
+            opacity: 0.9;
+        }
+        
+        .alert {
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-weight: 500;
+        }
+        
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 2px solid #c3e6cb;
+        }
+        
+        .alert-warning {
+            background: #fff3cd;
+            color: #856404;
+            border: 2px solid #ffeaa7;
+        }
+        
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 2px solid #f5c6cb;
+        }
+        
+        .login-container {
+            max-width: 500px;
+            margin: 50px auto;
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+        
+        .login-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .login-header h2 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+        
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 10px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .hidden {
+            display: none !important;
+        }
+        
+        .program-metrics {
+            background: #fff8e1;
+            border-left: 4px solid #ffc107;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+        
+        .modal-content {
+            background-color: white;
+            margin: 5% auto;
+            padding: 30px;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            line-height: 1;
+        }
+        
+        .close:hover {
+            color: #000;
+        }
+        
+        @media (max-width: 768px) {
+            .commodity-grid, .commodity-header {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+            
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .filters {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .nav-tabs {
+                flex-direction: column;
+            }
+            
+            .container {
+                margin: 10px;
+            }
+            
+            body {
+                padding: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Login Screen -->
+    <div id="loginScreen" class="login-container">
+        <div class="login-header">
+            <h2>🏥 ARV Stock Control System</h2>
+            <p>Luapula Province, Zambia</p>
+            <div id="connectionStatus" style="margin-top: 10px; font-size: 0.9em;"></div>
+        </div>
+        
+        <div class="form-group">
+            <label for="loginEmail">Email:</label>
+            <input type="email" id="loginEmail" placeholder="your.email@luapula.gov.zm">
+        </div>
+        <div class="form-group">
+            <label for="loginPassword">Password:</label>
+            <input type="password" id="loginPassword" placeholder="Password">
+        </div>
+        <button class="btn" onclick="login()" id="loginBtn" style="width: 100%;">
+            <span class="loading hidden"></span>Login
+        </button>
+        
+        <div style="margin-top: 20px; text-align: center; color: #666; font-size: 0.9em;">
+            Contact your system administrator for account access
+        </div>
+    </div>
+
+    <!-- Main Application -->
+    <div id="mainApp" class="container hidden">
+        <div class="header">
+            <h1>🏥 ARV Stock Control System</h1>
+            <p>Weekly ARV Reporting & HIV Program Monitoring - Luapula Province</p>
+            <div style="margin-top: 20px;">
+                <span id="currentUser" style="background: rgba(255,255,255,0.2); padding: 10px 20px; border-radius: 20px;"></span>
+                <button class="btn" onclick="logout()" style="margin-left: 15px; padding: 8px 16px; font-size: 0.9em;">Logout</button>
+            </div>
+        </div>
+
+        <div class="nav-tabs">
+            <button class="nav-tab active" onclick="showTab('submit', this)">📝 Submit ARV Report</button>
+            <button class="nav-tab" onclick="showTab('view', this)" id="viewTab">📊 View Reports</button>
+            <button class="nav-tab hidden" onclick="showTab('users', this)" id="usersTab">👥 User Management</button>
+            <button class="nav-tab hidden" onclick="showTab('admin', this)" id="adminTab">⚙️ Admin Dashboard</button>
+        </div>
+
+        <!-- Submit Report Tab -->
+        <div id="submit" class="tab-content active">
+            <h2 style="margin-bottom: 30px; color: #2c3e50;">📝 Weekly ARV Stock & Program Report</h2>
+            
+            <form id="arvForm">
+                <!-- Basic Information -->
+                <div class="form-section">
+                    <div class="section-title">📅 Report Information</div>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="reportWeek">Report Week:</label>
+                            <input type="week" id="reportWeek" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="facilityName">Facility Name:</label>
+                            <input type="text" id="facilityName" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label for="reporterName">Reporter Name:</label>
+                            <input type="text" id="reporterName" placeholder="Your full name" required>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ARV Commodities -->
+                <div class="form-section">
+                    <div class="section-title">💊 ARV Commodities Stock Report</div>
+                    <div class="commodity-header">
+                        <div>Commodity</div>
+                        <div>Opening Balance</div>
+                        <div>Received</div>
+                        <div>Used</div>
+                        <div>Given Out</div>
+                        <div>Current Balance</div>
+                    </div>
+                    <div id="arvCommodities"></div>
+                </div>
+
+                <!-- HIV Testing Commodities -->
+                <div class="form-section">
+                    <div class="section-title">🧪 HIV Testing Commodities</div>
+                    <div class="commodity-header">
+                        <div>Commodity</div>
+                        <div>Opening Balance</div>
+                        <div>Received</div>
+                        <div>Used</div>
+                        <div>Given Out</div>
+                        <div>Current Balance</div>
+                    </div>
+                    <div id="testingCommodities"></div>
+                </div>
+
+                <!-- Program Metrics -->
+                <div class="form-section program-metrics">
+                    <div class="section-title">📊 HIV Program Metrics</div>
+                    
+                    <div style="margin-bottom: 25px;">
+                        <h4 style="color: #2c3e50; margin-bottom: 15px;">Clients Seen</h4>
+                        <div class="form-grid-3">
+                            <div class="form-group">
+                                <label for="clientsSeen">Total Clients Seen:</label>
+                                <input type="number" id="clientsSeen" min="0" placeholder="0">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="margin-bottom: 25px;">
+                        <h4 style="color: #2c3e50; margin-bottom: 15px;">Drug Delivery Schedule</h4>
+                        <div class="form-grid-3">
+                            <div class="form-group">
+                                <label for="dueForDelivery">Due for Drug Delivery:</label>
+                                <input type="number" id="dueForDelivery" min="0" placeholder="0">
+                            </div>
+                            <div class="form-group">
+                                <label for="sixMMD">6MMD (6-month multi-month dispensing):</label>
+                                <input type="number" id="sixMMD" min="0" placeholder="0">
+                            </div>
+                            <div class="form-group">
+                                <label for="threeToFiveMMD">3-5MMD:</label>
+                                <input type="number" id="threeToFiveMMD" min="0" placeholder="0">
+                            </div>
+                            <div class="form-group">
+                                <label for="lessThanThreeMMD">Less than 3MMD:</label>
+                                <input type="number" id="lessThanThreeMMD" min="0" placeholder="0">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="margin-bottom: 25px;">
+                        <h4 style="color: #2c3e50; margin-bottom: 15px;">Viral Load Monitoring</h4>
+                        <div class="form-grid-3">
+                            <div class="form-group">
+                                <label for="clientsDueVL">Clients Due for VL:</label>
+                                <input type="number" id="clientsDueVL" min="0" placeholder="0">
+                            </div>
+                            <div class="form-group">
+                                <label for="vlCollected">VL Collected (from those due):</label>
+                                <input type="number" id="vlCollected" min="0" placeholder="0">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="margin-bottom: 25px;">
+                        <h4 style="color: #2c3e50; margin-bottom: 15px;">TPT & Community Activities</h4>
+                        <div class="form-grid-3">
+                            <div class="form-group">
+                                <label for="tptInitiations">TPT Initiations:</label>
+                                <input type="number" id="tptInitiations" min="0" placeholder="0">
+                            </div>
+                            <div class="form-group">
+                                <label for="homeDeliveries">Home Deliveries:</label>
+                                <input type="number" id="homeDeliveries" min="0" placeholder="0">
+                            </div>
+                            <div class="form-group">
+                                <label for="communityActivities">Community Activities:</label>
+                                <input type="number" id="communityActivities" min="0" placeholder="0">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Additional Notes -->
+                <div class="form-section">
+                    <div class="section-title">📝 Additional Information</div>
+                    <div class="form-group">
+                        <label for="remarks">Remarks/Notes:</label>
+                        <textarea id="remarks" rows="4" placeholder="Any additional notes, challenges, or observations..."></textarea>
+                    </div>
+                </div>
+                
+                <button type="submit" class="btn btn-success" id="submitBtn" style="width: 100%; padding: 20px; font-size: 1.2em;">
+                    <span class="loading hidden"></span>💾 Submit Complete ARV Report
+                </button>
+            </form>
+        </div>
+
+        <!-- View Reports Tab -->
+        <div id="view" class="tab-content">
+            <h2 style="margin-bottom: 30px; color: #2c3e50;">📊 ARV Stock Reports</h2>
+            
+            <div class="filters">
+                <div class="form-group">
+                    <label for="filterWeek">Filter by Week:</label>
+                    <input type="week" id="filterWeek">
+                </div>
+                <div class="form-group">
+                    <label for="filterFacility">Filter by Facility:</label>
+                    <select id="filterFacility">
+                        <option value="">All Facilities</option>
+                    </select>
+                </div>
+                <div>
+                    <button class="btn" onclick="applyFilters()">🔍 Apply Filters</button>
+                    <button class="btn" onclick="clearFilters()">🗑️ Clear</button>
+                    <button class="btn" onclick="refreshReports()">🔄 Refresh</button>
+                </div>
+            </div>
+
+            <div class="table-container">
+                <table id="reportsTable">
+                    <thead>
+                        <tr>
+                            <th>Week</th>
+                            <th>Hub</th>
+                            <th>Facility</th>
+                            <th>Reporter</th>
+                            <th>Clients Seen</th>
+                            <th>Due for Delivery</th>
+                            <th>6MMD</th>
+                            <th>3-5MMD</th>
+                            <th><3MMD</th>
+                            <th>VL Due</th>
+                            <th>VL Collected</th>
+                            <th>TPT Initiations</th>
+                            <th>Submitted</th>
+                        </tr>
+                    </thead>
+                    <tbody id="reportsTableBody">
+                        <tr><td colspan="13" style="text-align: center; color: #666;">Loading reports...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- User Management Tab -->
+        <div id="users" class="tab-content">
+            <h2 style="margin-bottom: 30px; color: #2c3e50;">👥 User Management</h2>
+            
+            <div style="margin-bottom: 30px;">
+                <button class="btn btn-success" onclick="showCreateUserModal()">➕ Create New User</button>
+            </div>
+
+            <div class="table-container">
+                <table id="usersTable">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Hub</th>
+                            <th>Facility</th>
+                            <th>Role</th>
+                            <th>Status</th>
+                            <th>Created</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="usersTableBody">
+                        <tr><td colspan="8" style="text-align: center; color: #666;">Loading users...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Admin Dashboard Tab -->
+        <div id="admin" class="tab-content">
+            <h2 style="margin-bottom: 30px; color: #2c3e50;">⚙️ Provincial Administrator Dashboard</h2>
+            
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <h3 id="totalFacilities">-</h3>
+                    <p>Active Facilities</p>
+                </div>
+                <div class="stat-card" style="background: linear-gradient(135deg, #27ae60 0%, #229954 100%);">
+                    <h3 id="totalReports">-</h3>
+                    <p>Total Reports</p>
+                </div>
+                <div class="stat-card" style="background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);">
+                    <h3 id="totalClients">-</h3>
+                    <p>Clients Served</p>
+                </div>
+                <div class="stat-card" style="background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%);">
+                    <h3 id="vlCollectionRate">-%</h3>
+                    <p>VL Collection Rate</p>
+                </div>
+            </div>
+
+            <div class="filters">
+                <div class="form-group">
+                    <label for="adminFilterHub">Filter by Hub:</label>
+                    <select id="adminFilterHub">
+                        <option value="">All Hubs</option>
+                        <option value="Mansa Hub">Mansa Hub</option>
+                        <option value="Kawambwa Hub">Kawambwa Hub</option>
+                        <option value="Samfya Hub">Samfya Hub</option>
+                        <option value="Nchelenge Hub">Nchelenge Hub</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="adminFilterDateFrom">From Week:</label>
+                    <input type="week" id="adminFilterDateFrom">
+                </div>
+                <div class="form-group">
+                    <label for="adminFilterDateTo">To Week:</label>
+                    <input type="week" id="adminFilterDateTo">
+                </div>
+                <div>
+                    <button class="btn" onclick="generateAdminReport()">📋 Generate Report</button>
+                    <button class="btn btn-success" onclick="exportData()">📤 Export Excel</button>
+                </div>
+            </div>
