@@ -1,0 +1,1582 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Medical Stock Management System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        .header h1 {
+            color: #2c3e50;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #7f8c8d;
+            font-size: 1.1rem;
+        }
+
+        .main-content {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .auth-container {
+            max-width: 400px;
+            margin: 0 auto;
+        }
+
+        .auth-tabs {
+            display: flex;
+            margin-bottom: 30px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 5px;
+        }
+
+        .auth-tab {
+            flex: 1;
+            padding: 12px;
+            text-align: center;
+            background: transparent;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .auth-tab.active {
+            background: #667eea;
+            color: white;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5a6fd8;
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn-warning {
+            background: #ffc107;
+            color: #212529;
+        }
+
+        .dashboard {
+            display: none;
+        }
+
+        .dashboard.active {
+            display: block;
+        }
+
+        .user-info {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .nav-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .nav-tab {
+            padding: 12px 20px;
+            background: #f8f9fa;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .nav-tab.active {
+            background: #667eea;
+            color: white;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .table-container {
+            overflow-x: auto;
+            margin: 20px 0;
+        }
+
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .table th,
+        .table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .table th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .table tr:hover {
+            background: #f8f9fa;
+        }
+
+        .report-form {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .commodity-section {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border: 2px solid #e9ecef;
+        }
+
+        .commodity-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #f8f9fa;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .alert {
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+        }
+
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .alert-danger {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .alert-warning {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .status-pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .status-approved {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-rejected {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 5% auto;
+            padding: 20px;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 800px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close:hover {
+            color: black;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .nav-tabs {
+                flex-direction: column;
+            }
+            
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Medical Stock Management System</h1>
+            <p>Comprehensive Healthcare Inventory Management Platform</p>
+        </div>
+
+        <div class="main-content">
+            <!-- Authentication Section -->
+            <div id="auth-section">
+                <div class="auth-container">
+                    <div class="auth-tabs">
+                        <button class="auth-tab active" onclick="switchAuthTab('signin')">Sign In</button>
+                        <button class="auth-tab" onclick="switchAuthTab('signup')">Sign Up</button>
+                    </div>
+
+                    <!-- Sign In Form -->
+                    <div id="signin-form">
+                        <form onsubmit="signIn(event)">
+                            <div class="form-group">
+                                <label for="signin-username">Username</label>
+                                <input type="text" id="signin-username" class="form-control" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="signin-password">Password</label>
+                                <input type="password" id="signin-password" class="form-control" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary" style="width: 100%;">Sign In</button>
+                        </form>
+                    </div>
+
+                    <!-- Sign Up Form -->
+                    <div id="signup-form" class="hidden">
+                        <form onsubmit="signUp(event)">
+                            <div class="form-group">
+                                <label for="signup-username">Username</label>
+                                <input type="text" id="signup-username" class="form-control" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="signup-password">Password</label>
+                                <input type="password" id="signup-password" class="form-control" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="signup-email">Email</label>
+                                <input type="email" id="signup-email" class="form-control" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="signup-fullname">Full Name</label>
+                                <input type="text" id="signup-fullname" class="form-control" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="signup-role">Role</label>
+                                <select id="signup-role" class="form-control" required>
+                                    <option value="">Select Role</option>
+                                    <option value="facility">Facility User</option>
+                                    <option value="district">District Coordinator</option>
+                                    <option value="provincial">Provincial Coordinator</option>
+                                    <option value="admin">Administrator</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="signup-province">Province</label>
+                                <select id="signup-province" class="form-control" required>
+                                    <option value="">Select Province</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="signup-district">District</label>
+                                <select id="signup-district" class="form-control" required>
+                                    <option value="">Select District</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="signup-facility">Facility</label>
+                                <select id="signup-facility" class="form-control">
+                                    <option value="">Select Facility</option>
+                                </select>
+                            </div>
+                            <button type="submit" class="btn btn-primary" style="width: 100%;">Sign Up</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dashboard Section -->
+            <div id="dashboard-section" class="dashboard">
+                <div class="user-info">
+                    <div>
+                        <strong id="user-display-name">Welcome, User</strong>
+                        <span id="user-role-display" class="status-badge status-pending">Role</span>
+                    </div>
+                    <button class="btn btn-secondary" onclick="signOut()">Sign Out</button>
+                </div>
+
+                <div class="nav-tabs">
+                    <button class="nav-tab active" onclick="switchTab('submit-report')" id="submit-report-tab">Submit Report</button>
+                    <button class="nav-tab" onclick="switchTab('view-reports')" id="view-reports-tab">View Reports</button>
+                    <button class="nav-tab" onclick="switchTab('report-status')" id="report-status-tab">Report Status</button>
+                    <button class="nav-tab hidden" onclick="switchTab('manage-users')" id="manage-users-tab">Manage Users</button>
+                    <button class="nav-tab hidden" onclick="switchTab('manage-commodities')" id="manage-commodities-tab">Manage Commodities</button>
+                    <button class="nav-tab hidden" onclick="switchTab('manage-facilities')" id="manage-facilities-tab">Manage Facilities</button>
+                    <button class="nav-tab hidden" onclick="switchTab('review-reports')" id="review-reports-tab">Review Reports</button>
+                </div>
+
+                <!-- Submit Report Tab -->
+                <div id="submit-report-content" class="tab-content active">
+                    <h3>Submit New Report</h3>
+                    <div id="report-alert"></div>
+                    
+                    <div class="report-form">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="report-week">Reporting Week</label>
+                                <select id="report-week" class="form-control" required>
+                                    <option value="">Select Week</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="report-month">Month</label>
+                                <select id="report-month" class="form-control" required>
+                                    <option value="">Select Month</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="report-year">Year</label>
+                                <select id="report-year" class="form-control" required>
+                                    <option value="">Select Year</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="report-name">Reporter Name</label>
+                                <input type="text" id="report-name" class="form-control" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="report-facility">Facility</label>
+                                <select id="report-facility" class="form-control" required>
+                                    <option value="">Select Facility</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <button type="button" class="btn btn-primary" onclick="startReport()">Start Report</button>
+                    </div>
+
+                    <!-- Report Content -->
+                    <div id="report-content" class="hidden">
+                        <div style="margin: 20px 0;">
+                            <button type="button" class="btn btn-secondary" onclick="goBack()">← Back</button>
+                            <button type="button" class="btn btn-success" onclick="previewReport()" style="float: right;">Preview Report</button>
+                        </div>
+
+                        <!-- Commodities Section -->
+                        <div class="commodity-section">
+                            <div class="commodity-header">
+                                <h4>Essential Commodities</h4>
+                                <button type="button" class="btn btn-primary" onclick="addCommodity()">Add Commodity</button>
+                            </div>
+                            <div id="commodity-list"></div>
+                        </div>
+
+                        <!-- Clinical Data Section -->
+                        <div class="commodity-section">
+                            <div class="commodity-header">
+                                <h4>Clinical Data</h4>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Clients Seen in Reporting Week</label>
+                                    <input type="number" id="clients-seen" class="form-control" min="0">
+                                </div>
+                                <div class="form-group">
+                                    <label>Due for Drug Delivery</label>
+                                    <input type="number" id="due-delivery" class="form-control" min="0">
+                                </div>
+                                <div class="form-group">
+                                    <label>Given 6MMD</label>
+                                    <input type="number" id="given-6mmd" class="form-control" min="0">
+                                </div>
+                                <div class="form-group">
+                                    <label>Given 3-5MMD</label>
+                                    <input type="number" id="given-3-5mmd" class="form-control" min="0">
+                                </div>
+                                <div class="form-group">
+                                    <label>Given Less Than 3MMD</label>
+                                    <input type="number" id="given-less-3mmd" class="form-control" min="0">
+                                </div>
+                                <div class="form-group">
+                                    <label>Total Clients Due for VL</label>
+                                    <input type="number" id="total-due-vl" class="form-control" min="0">
+                                </div>
+                                <div class="form-group">
+                                    <label>Total VL Samples Collected</label>
+                                    <input type="number" id="total-vl-collected" class="form-control" min="0">
+                                </div>
+                                <div class="form-group">
+                                    <label>Total TPT Initiations</label>
+                                    <input type="number" id="total-tpt" class="form-control" min="0">
+                                </div>
+                                <div class="form-group">
+                                    <label>pDTG-CURR</label>
+                                    <input type="number" id="pdtg-curr" class="form-control" min="0">
+                                </div>
+                                <div class="form-group">
+                                    <label>Transitioned to PALD</label>
+                                    <input type="number" id="transitioned-pald" class="form-control" min="0">
+                                </div>
+                                <div class="form-group">
+                                    <label>Total on PALD</label>
+                                    <input type="number" id="total-pald" class="form-control" min="0">
+                                </div>
+                                <div class="form-group">
+                                    <label>SOH</label>
+                                    <input type="number" id="soh" class="form-control" min="0">
+                                </div>
+                                <div class="form-group">
+                                    <label>3HP Weekly Initiations</label>
+                                    <input type="number" id="3hp-weekly" class="form-control" min="0">
+                                </div>
+                                <div class="form-group">
+                                    <label>FY on 3HP Cumulative</label>
+                                    <input type="number" id="fy-3hp-cumulative" class="form-control" min="0">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- NACS Section -->
+                        <div class="commodity-section">
+                            <div class="commodity-header">
+                                <h4>NACS</h4>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Total Screened</label>
+                                    <input type="number" id="nacs-screened" class="form-control" min="0">
+                                </div>
+                                <div class="form-group">
+                                    <label>Eligible for HEPS</label>
+                                    <input type="number" id="nacs-eligible" class="form-control" min="0">
+                                </div>
+                                <div class="form-group">
+                                    <label>HEPS Given to Clients</label>
+                                    <input type="number" id="nacs-given-clients" class="form-control" min="0">
+                                </div>
+                                <div class="form-group">
+                                    <label>Total Refill</label>
+                                    <input type="number" id="nacs-refill" class="form-control" min="0">
+                                </div>
+                                <div class="form-group">
+                                    <label>HEPS Given to Other Dept</label>
+                                    <input type="number" id="nacs-given-dept" class="form-control" min="0">
+                                </div>
+                                <div class="form-group">
+                                    <label>HEPS Stock on Hand</label>
+                                    <input type="number" id="nacs-stock" class="form-control" min="0">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div style="text-align: center; margin: 30px 0;">
+                            <button type="button" class="btn btn-success" onclick="submitReport()">Submit Report for Review</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Other tab contents will be populated by JavaScript -->
+                <div id="view-reports-content" class="tab-content">
+                    <h3>View Reports</h3>
+                    <div id="reports-table-container"></div>
+                </div>
+
+                <div id="report-status-content" class="tab-content">
+                    <h3>Report Status</h3>
+                    <div id="status-table-container"></div>
+                </div>
+
+                <div id="manage-users-content" class="tab-content">
+                    <h3>Manage Users</h3>
+                    <div id="users-table-container"></div>
+                </div>
+
+                <div id="manage-commodities-content" class="tab-content">
+                    <h3>Manage Commodities</h3>
+                    <div style="margin-bottom: 20px;">
+                        <button class="btn btn-primary" onclick="showAddCommodityModal()">Add New Commodity</button>
+                    </div>
+                    <div id="commodities-table-container"></div>
+                </div>
+
+                <div id="manage-facilities-content" class="tab-content">
+                    <h3>Manage Facilities</h3>
+                    <div style="margin-bottom: 20px;">
+                        <button class="btn btn-primary" onclick="showAddFacilityModal()">Add New Facility</button>
+                    </div>
+                    <div id="facilities-table-container"></div>
+                </div>
+
+                <div id="review-reports-content" class="tab-content">
+                    <h3>Review Reports</h3>
+                    <div id="review-table-container"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <div id="previewModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('previewModal')">&times;</span>
+            <h2>Report Preview</h2>
+            <div id="preview-content"></div>
+            <div style="text-align: center; margin-top: 20px;">
+                <button class="btn btn-primary" onclick="downloadPDF()">Download PDF</button>
+                <button class="btn btn-success" onclick="downloadExcel()">Download Excel</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="addCommodityModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('addCommodityModal')">&times;</span>
+            <h2>Add New Commodity</h2>
+            <form onsubmit="addNewCommodity(event)">
+                <div class="form-group">
+                    <label>Commodity Name</label>
+                    <input type="text" id="new-commodity-name" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label>Category</label>
+                    <select id="new-commodity-category" class="form-control" required>
+                        <option value="ARV">ARV Drugs</option>
+                        <option value="HIV_TEST">HIV Testing Kits</option>
+                        <option value="OTHER">Other Medical Items</option>
+                        <option value="NON_MEDICAL">Non-Medical Items</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Unit of Measure</label>
+                    <input type="text" id="new-commodity-unit" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label>Description</label>
+                    <textarea id="new-commodity-description" class="form-control" rows="3"></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary">Add Commodity</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Global state management
+        let currentUser = null;
+        let commodities = [];
+        let facilities = [];
+        let reports = [];
+        let users = [];
+        let currentReport = null;
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeApp();
+        });
+
+        function initializeApp() {
+            loadInitialData();
+            populateFormOptions();
+            
+            // Check if user is already logged in
+            const savedUser = JSON.parse(localStorage.getItem('currentUser') || 'null');
+            if (savedUser) {
+                currentUser = savedUser;
+                showDashboard();
+            }
+        }
+
+        function loadInitialData() {
+            // Load sample data
+            commodities = [
+                { id: 1, name: 'Efavirenz 600mg', category: 'ARV', unit: 'Tablets', description: 'ARV medication' },
+                { id: 2, name: 'Tenofovir 300mg', category: 'ARV', unit: 'Tablets', description: 'ARV medication' },
+                { id: 3, name: 'HIV Rapid Test Kit', category: 'HIV_TEST', unit: 'Tests', description: 'Rapid HIV testing' },
+                { id: 4, name: 'Gloves', category: 'OTHER', unit: 'Pairs', description: 'Medical gloves' }
+            ];
+
+            facilities = [
+                { id: 1, name: 'Central Hospital', province: 'Copperbelt', district: 'Ndola', hub: 'Central Hub' },
+                { id: 2, name: 'District Clinic', province: 'Copperbelt', district: 'Kitwe', hub: 'North Hub' },
+                { id: 3, name: 'Rural Health Center', province: 'Lusaka', district: 'Lusaka', hub: 'South Hub' }
+            ];
+
+            users = [
+                { 
+                    id: 1,
+                    username: 'admin',
+                    password: 'admin123',
+                    role: 'admin',
+                    fullName: 'System Administrator',
+                    email: 'admin@system.com',
+                    status: 'approved',
+                    province: 'All',
+                    district: 'All',
+                    facility: 'All'
+                },
+                {
+                    id: 2,
+                    username: 'facility1',
+                    password: 'pass123',
+                    role: 'facility',
+                    fullName: 'Facility User',
+                    email: 'facility@test.com',
+                    status: 'approved',
+                    province: 'Copperbelt',
+                    district: 'Ndola',
+                    facility: 'Central Hospital'
+                }
+            ];
+
+            reports = [];
+        }
+
+        function populateFormOptions() {
+            // Populate weeks
+            const weekSelect = document.getElementById('report-week');
+            for (let i = 1; i <= 53; i++) {
+                const option = new Option(`Week ${i}`, i);
+                weekSelect.add(option);
+            }
+
+            // Populate months
+            const monthSelect = document.getElementById('report-month');
+            const months = ['January', 'February', 'March', 'April', 'May', 'June', 
+                           'July', 'August', 'September', 'October', 'November', 'December'];
+            months.forEach((month, index) => {
+                const option = new Option(month, index + 1);
+                monthSelect.add(option);
+            });
+
+            // Populate years
+            const yearSelect = document.getElementById('report-year');
+            const currentYear = new Date().getFullYear();
+            for (let year = currentYear - 2; year <= currentYear + 1; year++) {
+                const option = new Option(year, year);
+                yearSelect.add(option);
+            }
+
+            // Populate provinces, districts, facilities
+            populateLocationOptions();
+        }
+
+        function populateLocationOptions() {
+            const provinces = [...new Set(facilities.map(f => f.province))];
+            const signupProvince = document.getElementById('signup-province');
+            const reportFacility = document.getElementById('report-facility');
+            
+            provinces.forEach(province => {
+                signupProvince.add(new Option(province, province));
+            });
+
+            facilities.forEach(facility => {
+                reportFacility.add(new Option(`${facility.name} - ${facility.district}, ${facility.province}`, facility.id));
+            });
+        }
+
+        // Authentication functions
+        function switchAuthTab(tab) {
+            const signinForm = document.getElementById('signin-form');
+            const signupForm = document.getElementById('signup-form');
+            const tabs = document.querySelectorAll('.auth-tab');
+
+            tabs.forEach(t => t.classList.remove('active'));
+            
+            if (tab === 'signin') {
+                signinForm.classList.remove('hidden');
+                signupForm.classList.add('hidden');
+                tabs[0].classList.add('active');
+            } else {
+                signinForm.classList.add('hidden');
+                signupForm.classList.remove('hidden');
+                tabs[1].classList.add('active');
+            }
+        }
+
+        function signIn(event) {
+            event.preventDefault();
+            const username = document.getElementById('signin-username').value;
+            const password = document.getElementById('signin-password').value;
+
+            const user = users.find(u => u.username === username && u.password === password);
+            
+            if (user && user.status === 'approved') {
+                currentUser = user;
+                localStorage.setItem('currentUser', JSON.stringify(user));
+                showDashboard();
+            } else if (user && user.status === 'pending') {
+                showAlert('Your account is pending approval. Please contact an administrator.', 'warning');
+            } else {
+                showAlert('Invalid credentials. Please try again.', 'danger');
+            }
+        }
+
+        function signUp(event) {
+            event.preventDefault();
+            const formData = {
+                username: document.getElementById('signup-username').value,
+                password: document.getElementById('signup-password').value,
+                email: document.getElementById('signup-email').value,
+                fullName: document.getElementById('signup-fullname').value,
+                role: document.getElementById('signup-role').value,
+                province: document.getElementById('signup-province').value,
+                district: document.getElementById('signup-district').value,
+                facility: document.getElementById('signup-facility').value
+            };
+
+            // Check if username already exists
+            if (users.find(u => u.username === formData.username)) {
+                showAlert('Username already exists. Please choose a different one.', 'danger');
+                return;
+            }
+
+            const newUser = {
+                id: users.length + 1,
+                ...formData,
+                status: 'pending'
+            };
+
+            users.push(newUser);
+            showAlert('Account created successfully. Please wait for administrator approval.', 'success');
+            
+            // Reset form
+            document.getElementById('signup-form').reset();
+        }
+
+        function signOut() {
+            currentUser = null;
+            localStorage.removeItem('currentUser');
+            document.getElementById('auth-section').style.display = 'block';
+            document.getElementById('dashboard-section').classList.remove('active');
+            
+            // Reset forms
+            document.getElementById('signin-form').reset();
+            switchTab('submit-report');
+        }
+
+        function showDashboard() {
+            document.getElementById('auth-section').style.display = 'none';
+            document.getElementById('dashboard-section').classList.add('active');
+            
+            // Update user info
+            document.getElementById('user-display-name').textContent = `Welcome, ${currentUser.fullName}`;
+            document.getElementById('user-role-display').textContent = currentUser.role.toUpperCase();
+            
+            // Configure navigation based on role
+            configureNavigation();
+            loadDashboardData();
+        }
+
+        function configureNavigation() {
+            const tabs = {
+                'submit-report-tab': ['facility'],
+                'view-reports-tab': ['facility', 'district', 'provincial', 'admin'],
+                'report-status-tab': ['facility', 'district', 'provincial', 'admin'],
+                'manage-users-tab': ['admin', 'district', 'provincial'],
+                'manage-commodities-tab': ['admin', 'district', 'provincial'],
+                'manage-facilities-tab': ['admin', 'district', 'provincial'],
+                'review-reports-tab': ['district', 'provincial', 'admin']
+            };
+
+            Object.keys(tabs).forEach(tabId => {
+                const tab = document.getElementById(tabId);
+                if (tabs[tabId].includes(currentUser.role)) {
+                    tab.classList.remove('hidden');
+                } else {
+                    tab.classList.add('hidden');
+                }
+            });
+        }
+
+        function loadDashboardData() {
+            loadReports();
+            loadUsers();
+            loadCommoditiesTable();
+            loadFacilitiesTable();
+        }
+
+        // Tab switching
+        function switchTab(tabName) {
+            // Hide all tab contents
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            // Remove active class from all tabs
+            document.querySelectorAll('.nav-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Show selected tab content
+            document.getElementById(tabName + '-content').classList.add('active');
+            document.getElementById(tabName + '-tab').classList.add('active');
+        }
+
+        // Report functions
+        function startReport() {
+            const week = document.getElementById('report-week').value;
+            const month = document.getElementById('report-month').value;
+            const year = document.getElementById('report-year').value;
+            const name = document.getElementById('report-name').value;
+            const facility = document.getElementById('report-facility').value;
+
+            if (!week || !month || !year || !name || !facility) {
+                showAlert('Please fill all required fields.', 'danger', 'report-alert');
+                return;
+            }
+
+            currentReport = {
+                week,
+                month,
+                year,
+                reporterName: name,
+                facilityId: facility,
+                commodities: [],
+                clinicalData: {},
+                nacsData: {},
+                status: 'draft',
+                createdAt: new Date().toISOString()
+            };
+
+            document.getElementById('report-content').classList.remove('hidden');
+            loadCommodityList();
+        }
+
+        function loadCommodityList() {
+            const container = document.getElementById('commodity-list');
+            container.innerHTML = '';
+            
+            if (currentReport.commodities.length === 0) {
+                container.innerHTML = '<p>No commodities added yet. Click "Add Commodity" to start.</p>';
+            } else {
+                currentReport.commodities.forEach((commodity, index) => {
+                    const commodityDiv = createCommodityRow(commodity, index);
+                    container.appendChild(commodityDiv);
+                });
+            }
+        }
+
+        function addCommodity() {
+            const modal = document.createElement('div');
+            modal.className = 'modal';
+            modal.style.display = 'block';
+            modal.innerHTML = `
+                <div class="modal-content">
+                    <span class="close" onclick="this.parentElement.parentElement.remove()">&times;</span>
+                    <h3>Select Commodity</h3>
+                    <div class="form-group">
+                        <label>Commodity</label>
+                        <select id="select-commodity" class="form-control" required>
+                            <option value="">Select Commodity</option>
+                            ${commodities.map(c => `<option value="${c.id}">${c.name} (${c.category})</option>`).join('')}
+                        </select>
+                    </div>
+                    <button type="button" class="btn btn-primary" onclick="addSelectedCommodity()">Add to Report</button>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+
+        function addSelectedCommodity() {
+            const commodityId = document.getElementById('select-commodity').value;
+            if (!commodityId) return;
+
+            const commodity = commodities.find(c => c.id == commodityId);
+            if (!commodity) return;
+
+            // Check if already added
+            if (currentReport.commodities.find(c => c.commodityId == commodityId)) {
+                showAlert('Commodity already added to report.', 'warning', 'report-alert');
+                return;
+            }
+
+            const reportCommodity = {
+                commodityId: commodity.id,
+                name: commodity.name,
+                category: commodity.category,
+                unit: commodity.unit,
+                openingBalance: 0,
+                received: 0,
+                used: 0,
+                givenToOtherFacility: '',
+                givenToOtherFacilityName: '',
+                closingBalance: 0,
+                expiryDate: ''
+            };
+
+            currentReport.commodities.push(reportCommodity);
+            loadCommodityList();
+            
+            // Close modal
+            document.querySelector('.modal').remove();
+        }
+
+        function createCommodityRow(commodity, index) {
+            const div = document.createElement('div');
+            div.className = 'commodity-section';
+            div.innerHTML = `
+                <div class="commodity-header">
+                    <h5>${commodity.name} (${commodity.category})</h5>
+                    <button type="button" class="btn btn-danger" onclick="removeCommodity(${index})">Remove</button>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Opening Balance</label>
+                        <input type="number" class="form-control" min="0" 
+                               value="${commodity.openingBalance}" 
+                               onchange="updateCommodity(${index}, 'openingBalance', this.value)">
+                    </div>
+                    <div class="form-group">
+                        <label>Received</label>
+                        <input type="number" class="form-control" min="0" 
+                               value="${commodity.received}" 
+                               onchange="updateCommodity(${index}, 'received', this.value)">
+                    </div>
+                    <div class="form-group">
+                        <label>Used</label>
+                        <input type="number" class="form-control" min="0" 
+                               value="${commodity.used}" 
+                               onchange="updateCommodity(${index}, 'used', this.value)">
+                    </div>
+                    <div class="form-group">
+                        <label>Given to Other Facility</label>
+                        <input type="number" class="form-control" min="0" 
+                               value="${commodity.givenToOtherFacility}" 
+                               onchange="updateCommodity(${index}, 'givenToOtherFacility', this.value)">
+                    </div>
+                    <div class="form-group">
+                        <label>Facility Name (if given)</label>
+                        <input type="text" class="form-control" 
+                               value="${commodity.givenToOtherFacilityName}" 
+                               onchange="updateCommodity(${index}, 'givenToOtherFacilityName', this.value)">
+                    </div>
+                    <div class="form-group">
+                        <label>Expiry Date</label>
+                        <input type="date" class="form-control" 
+                               value="${commodity.expiryDate}" 
+                               onchange="updateCommodity(${index}, 'expiryDate', this.value)">
+                    </div>
+                    <div class="form-group">
+                        <label>Closing Balance (Auto-calculated)</label>
+                        <input type="number" class="form-control" readonly 
+                               value="${commodity.closingBalance}">
+                    </div>
+                </div>
+            `;
+            return div;
+        }
+
+        function updateCommodity(index, field, value) {
+            if (currentReport.commodities[index]) {
+                currentReport.commodities[index][field] = field === 'givenToOtherFacilityName' ? value : parseFloat(value) || 0;
+                
+                // Auto-calculate closing balance
+                const commodity = currentReport.commodities[index];
+                commodity.closingBalance = commodity.openingBalance + commodity.received - commodity.used - commodity.givenToOtherFacility;
+                
+                loadCommodityList();
+            }
+        }
+
+        function removeCommodity(index) {
+            currentReport.commodities.splice(index, 1);
+            loadCommodityList();
+        }
+
+        function previewReport() {
+            if (!currentReport || currentReport.commodities.length === 0) {
+                showAlert('Please add at least one commodity to the report.', 'warning', 'report-alert');
+                return;
+            }
+
+            // Collect clinical data
+            collectClinicalData();
+            
+            // Generate preview
+            const preview = generateReportPreview();
+            document.getElementById('preview-content').innerHTML = preview;
+            document.getElementById('previewModal').style.display = 'block';
+        }
+
+        function collectClinicalData() {
+            currentReport.clinicalData = {
+                clientsSeen: document.getElementById('clients-seen').value || 0,
+                dueDelivery: document.getElementById('due-delivery').value || 0,
+                given6mmd: document.getElementById('given-6mmd').value || 0,
+                given35mmd: document.getElementById('given-3-5mmd').value || 0,
+                givenLess3mmd: document.getElementById('given-less-3mmd').value || 0,
+                totalDueVl: document.getElementById('total-due-vl').value || 0,
+                totalVlCollected: document.getElementById('total-vl-collected').value || 0,
+                totalTpt: document.getElementById('total-tpt').value || 0,
+                pdtgCurr: document.getElementById('pdtg-curr').value || 0,
+                transitionedPald: document.getElementById('transitioned-pald').value || 0,
+                totalPald: document.getElementById('total-pald').value || 0,
+                soh: document.getElementById('soh').value || 0,
+                hp3Weekly: document.getElementById('3hp-weekly').value || 0,
+                fy3hpCumulative: document.getElementById('fy-3hp-cumulative').value || 0
+            };
+
+            currentReport.nacsData = {
+                totalScreened: document.getElementById('nacs-screened').value || 0,
+                eligibleHeps: document.getElementById('nacs-eligible').value || 0,
+                hepsGivenClients: document.getElementById('nacs-given-clients').value || 0,
+                totalRefill: document.getElementById('nacs-refill').value || 0,
+                hepsGivenDept: document.getElementById('nacs-given-dept').value || 0,
+                hepsStock: document.getElementById('nacs-stock').value || 0
+            };
+        }
+
+        function generateReportPreview() {
+            const facility = facilities.find(f => f.id == currentReport.facilityId);
+            
+            let html = `
+                <div style="text-align: center; margin-bottom: 20px;">
+                    <h3>Medical Stock Report Preview</h3>
+                    <p><strong>Facility:</strong> ${facility ? facility.name : 'Unknown'}</p>
+                    <p><strong>Reporting Period:</strong> Week ${currentReport.week}, ${getMonthName(currentReport.month)} ${currentReport.year}</p>
+                    <p><strong>Reporter:</strong> ${currentReport.reporterName}</p>
+                </div>
+                
+                <h4>Essential Commodities</h4>
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Commodity</th>
+                            <th>Opening Balance</th>
+                            <th>Received</th>
+                            <th>Used</th>
+                            <th>Given to Other</th>
+                            <th>Closing Balance</th>
+                            <th>Expiry Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            currentReport.commodities.forEach(commodity => {
+                html += `
+                    <tr>
+                        <td>${commodity.name}</td>
+                        <td>${commodity.openingBalance}</td>
+                        <td>${commodity.received}</td>
+                        <td>${commodity.used}</td>
+                        <td>${commodity.givenToOtherFacility}${commodity.givenToOtherFacilityName ? ' (' + commodity.givenToOtherFacilityName + ')' : ''}</td>
+                        <td>${commodity.closingBalance}</td>
+                        <td>${commodity.expiryDate || 'N/A'}</td>
+                    </tr>
+                `;
+            });
+
+            html += `
+                    </tbody>
+                </table>
+                
+                <h4>Clinical Data</h4>
+                <table class="table">
+                    <tbody>
+                        <tr><td>Clients Seen in Reporting Week</td><td>${currentReport.clinicalData.clientsSeen}</td></tr>
+                        <tr><td>Due for Drug Delivery</td><td>${currentReport.clinicalData.dueDelivery}</td></tr>
+                        <tr><td>Given 6MMD</td><td>${currentReport.clinicalData.given6mmd}</td></tr>
+                        <tr><td>Given 3-5MMD</td><td>${currentReport.clinicalData.given35mmd}</td></tr>
+                        <tr><td>Given Less Than 3MMD</td><td>${currentReport.clinicalData.givenLess3mmd}</td></tr>
+                        <tr><td>Total Clients Due for VL</td><td>${currentReport.clinicalData.totalDueVl}</td></tr>
+                        <tr><td>Total VL Samples Collected</td><td>${currentReport.clinicalData.totalVlCollected}</td></tr>
+                        <tr><td>Total TPT Initiations</td><td>${currentReport.clinicalData.totalTpt}</td></tr>
+                        <tr><td>pDTG-CURR</td><td>${currentReport.clinicalData.pdtgCurr}</td></tr>
+                        <tr><td>Transitioned to PALD</td><td>${currentReport.clinicalData.transitionedPald}</td></tr>
+                        <tr><td>Total on PALD</td><td>${currentReport.clinicalData.totalPald}</td></tr>
+                        <tr><td>SOH</td><td>${currentReport.clinicalData.soh}</td></tr>
+                        <tr><td>3HP Weekly Initiations</td><td>${currentReport.clinicalData.hp3Weekly}</td></tr>
+                        <tr><td>FY on 3HP Cumulative</td><td>${currentReport.clinicalData.fy3hpCumulative}</td></tr>
+                    </tbody>
+                </table>
+                
+                <h4>NACS Data</h4>
+                <table class="table">
+                    <tbody>
+                        <tr><td>Total Screened</td><td>${currentReport.nacsData.totalScreened}</td></tr>
+                        <tr><td>Eligible for HEPS</td><td>${currentReport.nacsData.eligibleHeps}</td></tr>
+                        <tr><td>HEPS Given to Clients</td><td>${currentReport.nacsData.hepsGivenClients}</td></tr>
+                        <tr><td>Total Refill</td><td>${currentReport.nacsData.totalRefill}</td></tr>
+                        <tr><td>HEPS Given to Other Dept</td><td>${currentReport.nacsData.hepsGivenDept}</td></tr>
+                        <tr><td>HEPS Stock on Hand</td><td>${currentReport.nacsData.hepsStock}</td></tr>
+                    </tbody>
+                </table>
+            `;
+
+            return html;
+        }
+
+        function submitReport() {
+            if (!currentReport || currentReport.commodities.length === 0) {
+                showAlert('Please add at least one commodity to the report.', 'warning', 'report-alert');
+                return;
+            }
+
+            collectClinicalData();
+            
+            currentReport.id = reports.length + 1;
+            currentReport.status = 'pending';
+            currentReport.submittedAt = new Date().toISOString();
+            currentReport.userId = currentUser.id;
+            
+            reports.push(currentReport);
+            
+            showAlert('Report submitted successfully for review!', 'success', 'report-alert');
+            
+            // Reset form
+            currentReport = null;
+            document.getElementById('report-content').classList.add('hidden');
+            document.querySelector('.report-form').reset();
+        }
+
+        function goBack() {
+            document.getElementById('report-content').classList.add('hidden');
+            currentReport = null;
+        }
+
+        // Utility functions
+        function getMonthName(monthNumber) {
+            const months = ['January', 'February', 'March', 'April', 'May', 'June', 
+                           'July', 'August', 'September', 'October', 'November', 'December'];
+            return months[monthNumber - 1];
+        }
+
+        function showAlert(message, type, containerId = 'main-alert') {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+            
+            container.innerHTML = `<div class="alert alert-${type}">${message}</div>`;
+            
+            setTimeout(() => {
+                container.innerHTML = '';
+            }, 5000);
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+
+        function downloadPDF() {
+            // In a real implementation, this would generate a PDF
+            showAlert('PDF download functionality would be implemented here.', 'info');
+        }
+
+        function downloadExcel() {
+            // In a real implementation, this would generate an Excel file
+            showAlert('Excel download functionality would be implemented here.', 'info');
+        }
+
+        // Load table data functions
+        function loadReports() {
+            const container = document.getElementById('reports-table-container');
+            let userReports = reports;
+            
+            // Filter reports based on user role
+            if (currentUser.role === 'facility') {
+                userReports = reports.filter(r => r.userId === currentUser.id);
+            }
+            
+            if (userReports.length === 0) {
+                container.innerHTML = '<p>No reports found.</p>';
+                return;
+            }
+            
+            let html = `
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Report ID</th>
+                            <th>Facility</th>
+                            <th>Period</th>
+                            <th>Reporter</th>
+                            <th>Status</th>
+                            <th>Submitted Date</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+            
+            userReports.forEach(report => {
+                const facility = facilities.find(f => f.id == report.facilityId);
+                html += `
+                    <tr>
+                        <td>RPT-${String(report.id).padStart(3, '0')}</td>
+                        <td>${facility ? facility.name : 'Unknown'}</td>
+                        <td>Week ${report.week}, ${getMonthName(report.month)} ${report.year}</td>
+                        <td>${report.reporterName}</td>
+                        <td><span class="status-badge status-${report.status}">${report.status.toUpperCase()}</span></td>
+                        <td>${new Date(report.submittedAt || report.createdAt).toLocaleDateString()}</td>
+                        <td>
+                            <button class="btn btn-primary" onclick="viewReport(${report.id})">View</button>
+                            <button class="btn btn-success" onclick="downloadReportPDF(${report.id})">PDF</button>
+                        </td>
+                    </tr>
+                `;
+            });
+            
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        }
+
+        function loadUsers() {
+            if (!['admin', 'district', 'provincial'].includes(currentUser.role)) return;
+            
+            const container = document.getElementById('users-table-container');
+            
+            let html = `
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Username</th>
+                            <th>Full Name</th>
+                            <th>Role</th>
+                            <th>Province</th>
+                            <th>District</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+            
+            users.forEach(user => {
+                if (user.id === currentUser.id) return; // Skip current user
+                
+                html += `
+                    <tr>
+                        <td>${user.username}</td>
+                        <td>${user.fullName}</td>
+                        <td>${user.role}</td>
+                        <td>${user.province}</td>
+                        <td>${user.district}</td>
+                        <td><span class="status-badge status-${user.status}">${user.status.toUpperCase()}</span></td>
+                        <td>
+                            ${user.status === 'pending' ? `
+                                <button class="btn btn-success" onclick="approveUser(${user.id})">Approve</button>
+                                <button class="btn btn-danger" onclick="rejectUser(${user.id})">Reject</button>
+                            ` : ''}
+                            <button class="btn btn-danger" onclick="deleteUser(${user.id})">Delete</button>
+                        </td>
+                    </tr>
+                `;
+            });
+            
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        }
+
+        function loadCommoditiesTable() {
+            if (!['admin', 'district', 'provincial'].includes(currentUser.role)) return;
+            
+            const container = document.getElementById('commodities-table-container');
+            
+            let html = `
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Category</th>
+                            <th>Unit</th>
+                            <th>Description</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+            
+            commodities.forEach(commodity => {
+                html += `
+                    <tr>
+                        <td>${commodity.name}</td>
+                        <td>${commodity.category}</td>
+                        <td>${commodity.unit}</td>
+                        <td>${commodity.description}</td>
+                        <td>
+                            <button class="btn btn-warning" onclick="editCommodity(${commodity.id})">Edit</button>
+                            <button class="btn btn-danger" onclick="deleteCommodity(${commodity.id})">Delete</button>
+                        </td>
+                    </tr>
+                `;
+            });
+            
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        }
+
+        function loadFacilitiesTable() {
+            if (!['admin', 'district', 'provincial'].includes(currentUser.role)) return;
+            
+            const container = document.getElementById('facilities-table-container');
+            
+            let html = `
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Province</th>
+                            <th>District</th>
+                            <th>Hub</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+            
+            facilities.forEach(facility => {
+                html += `
+                    <tr>
+                        <td>${facility.name}</td>
+                        <td>${facility.province}</td>
+                        <td>${facility.district}</td>
+                        <td>${facility.hub}</td>
+                        <td>
+                            <button class="btn btn-warning" onclick="editFacility(${facility.id})">Edit</button>
+                            <button class="btn btn-danger" onclick="deleteFacility(${facility.id})">Delete</button>
+                        </td>
+                    </tr>
+                `;
+            });
+            
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        }
+
+        // User management functions
+        function approveUser(userId) {
+            const user = users.find(u => u.id === userId);
+            if (user) {
+                user.status = 'approved';
+                loadUsers();
+                showAlert('User approved successfully!', 'success');
+            }
+        }
+
+        function rejectUser(userId) {
+            const user = users.find(u => u.id === userId);
+            if (user) {
+                user.status = 'rejected';
+                loadUsers();
+                showAlert('User rejected!', 'warning');
+            }
+        }
+
+        function deleteUser(userId) {
+            if (confirm('Are you sure you want to delete this user?')) {
+                const index = users.findIndex(u => u.id === userId);
+                if (index > -1) {
+                    users.splice(index, 1);
+                    loadUsers();
+                    showAlert('User deleted successfully!', 'success');
+                }
+            }
+        }
+
+        // Modal functions
+        function showAddCommodityModal() {
+            document.getElementById('addCommodityModal').style.display = 'block';
+        }
+
+        function addNewCommodity(event) {
+            event.preventDefault();
+            
+            const newCommodity = {
+                id: commodities.length + 1,
+                name: document.getElementById('new-commodity-name').value,
+                category: document.getElementById('new-commodity-category').value,
+                unit: document.getElementById('new-commodity-unit').value,
+                description: document.getElementById('new-commodity-description').value
+            };
+            
+            commodities.push(newCommodity);
+            loadCommoditiesTable();
+            closeModal('addCommodityModal');
+            
+            // Reset form
+            document.querySelector('#addCommodityModal form').reset();
+            
+            showAlert('Commodity added successfully!', 'success');
+        }
+
+        // Validation function to prevent data loss on refresh
+        window.addEventListener('beforeunload', function(e) {
+            if (currentReport && currentReport.commodities.length > 0) {
+                e.preventDefault();
+                e.returnValue = 'You have unsaved changes. Are you sure you want to leave?';
+            }
+        });
+
+        // Auto-save current report to prevent data loss
+        setInterval(function() {
+            if (currentReport) {
+                sessionStorage.setItem('currentReport', JSON.stringify(currentReport));
+            }
+        }, 30000); // Save every 30 seconds
+
+        // Restore report on page load
+        window.addEventListener('load', function() {
+            const savedReport = sessionStorage.getItem('currentReport');
+            if (savedReport && currentUser) {
+                currentReport = JSON.parse(savedReport);
+                if (currentReport.commodities.length > 0) {
+                    document.getElementById('report-content').classList.remove('hidden');
+                    loadCommodityList();
+                }
+            }
+        });
+    </script>
+</body>
+</html>
